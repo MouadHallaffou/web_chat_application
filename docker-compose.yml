@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    image: node:18
+    container_name: express_backend
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    command: npm start
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+
+  frontend:
+    image: node:18
+    container_name: react_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: npm start
+    ports:
+      - "3000:3000"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
