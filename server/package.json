@@ -1,0 +1,27 @@
+{
+    "name": "chatbot-server",
+    "version": "1.0.0",
+    "description": "A modern Express server for a chatbot application",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "nodemon index.js",
+        "lint": "eslint ."
+    },
+    "keywords": [
+        "express",
+        "chatbot",
+        "server",
+        "api"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "express": "^4.19.2"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.3",
+        "eslint": "^8.56.0"
+    }
+}

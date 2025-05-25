@@ -1,6 +1,4 @@
-## 📦 Structure
-```
-chatbot/
+chatbotApp/
 │
 ├── docker/
 │
@@ -61,4 +59,3 @@ chatbot/
 └── tests/
     ├── client/
     └── server/
-```
