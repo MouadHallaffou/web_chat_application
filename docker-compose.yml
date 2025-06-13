@@ -1,26 +1,55 @@
 version: '3.8'
 
 services:
-  backend:
-    image: node:18
-    container_name: express_backend
-    working_dir: /app
-    volumes:
-      - ./backend:/app
-    command: npm start
-    ports:
-      - "5000:5000"
-    environment:
-      - NODE_ENV=development
-
-  frontend:
-    image: node:18
-    container_name: react_frontend
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    command: npm start
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - server
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/chatbot
+      - JWT_SECRET=your_jwt_secret
+      - PORT=5000
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  elasticsearch:
+    image: elasticsearch:8.11.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+volumes:
+  mongodb_data:
+  elasticsearch_data:
