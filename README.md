@@ -78,59 +78,66 @@ docker-compose up -d
 ```
 chatbot/
 │
-├── docker/
+├── .github/                    # Configuration CI/CD
+│   └── workflows/
 │
-├── docker-compose.yml
-├── .env
-├── .gitignore
-├── README.md
+├── docker/                     # Configuration Docker
+│   ├── client/
+│   ├── server/
+│   └── nginx/
 │
-├── client/
+├── docs/                       # Documentation
+│   ├── api/
+│   ├── architecture/
+│   └── deployment/
+│
+├── client/                     # Application Frontend
 │   ├── public/
 │   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── features/
+│   │   ├── assets/            # Images, fonts, etc.
+│   │   ├── components/        # Composants réutilisables
+│   │   ├── features/          # Modules fonctionnels
 │   │   │   ├── chat/
 │   │   │   ├── auth/
 │   │   │   ├── call/
-│   │   │   ├── user/
-│   │   │   └── ...
-│   │   ├── hooks/
-│   │   ├── layouts/
-│   │   ├── pages/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── store/
-│   │   ├── styles/
-│   │   ├── utils/
+│   │   │   └── user/
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── layouts/           # Layouts de l'application
+│   │   ├── pages/             # Pages de l'application
+│   │   ├── routes/            # Configuration des routes
+│   │   ├── services/          # Services API
+│   │   ├── store/             # État global (Redux)
+│   │   ├── styles/            # Styles globaux
+│   │   ├── utils/             # Utilitaires
+│   │   ├── i18n/              # Internationalisation
 │   │   ├── App.tsx
 │   │   └── main.tsx
 │   ├── tailwind.config.js
 │   ├── postcss.config.js
 │   └── package.json
 │
-├── server/
+├── server/                     # Application Backend
 │   ├── src/
-│   │   ├── api/
-│   │   ├── config/
-│   │   ├── controllers/
-│   │   ├── middlewares/
-│   │   ├── models/
-│   │   ├── services/
-│   │   ├── sockets/
-│   │   ├── utils/
-│   │   ├── jobs/
-│   │   ├── app.js
-│   │   ├── server.js
-│   │   └── peer/
+│   │   ├── api/               # Routes API
+│   │   ├── config/            # Configuration
+│   │   ├── controllers/       # Contrôleurs
+│   │   ├── middlewares/       # Middlewares
+│   │   ├── models/            # Modèles de données
+│   │   ├── services/          # Services métier
+│   │   ├── sockets/           # Gestion WebSocket
+│   │   ├── utils/             # Utilitaires
+│   │   ├── jobs/              # Tâches en arrière-plan
+│   │   ├── monitoring/        # Configuration monitoring
+│   │   ├── logging/           # Configuration logging
+│   │   ├── app.ts
+│   │   └── server.ts
 │   ├── package.json
 │   └── tsconfig.json
 │
-├── shared/
-│   ├── types/
-│   ├── constants/
-│   └── utils/
+├── shared/                     # Code partagé
+│   ├── types/                 # Types TypeScript
+│   ├── constants/             # Constantes
+│   └── utils/                 # Utilitaires communs
 │
 ├── scripts/
 │
