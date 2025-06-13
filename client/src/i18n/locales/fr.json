@@ -50,5 +50,9 @@
     "serverError": "Erreur serveur",
     "networkError": "Erreur réseau",
     "unauthorized": "Non autorisé"
+  },
+  "translation": {
+    "welcome": "Bienvenue",
+    "hello": "Bonjour"
   }
-} 
+}
