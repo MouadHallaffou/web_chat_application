@@ -104,8 +104,8 @@ chatbot/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/chatbot.git
-cd chatbot
+git clone https://github.com/MouadHallaffou/web_chat_application.git
+cd web_chat_application
 ```
 
 2. Install dependencies:
