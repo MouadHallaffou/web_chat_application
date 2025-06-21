@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import AuthPage from './AuthPage';
 import ChatPage from './ChatPage';

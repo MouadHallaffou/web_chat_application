@@ -1,46 +1,35 @@
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import LoginForm from '../components/auth/LoginForm';
+import RegisterForm from '../components/auth/RegisterForm';
 
-import React, { useState } from 'react';
-import LoginForm from '@/components/auth/LoginForm';
-import RegisterForm from '@/components/auth/RegisterForm';
+type AuthMode = 'login' | 'register';
 
 interface AuthPageProps {
   onAuthSuccess: () => void;
 }
 
-const AuthPage = ({ onAuthSuccess }: AuthPageProps) => {
-  const [isLogin, setIsLogin] = useState(true);
+const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
+  const location = useLocation();
+  const [mode, setMode] = useState<AuthMode>('login');
 
-  const handleLogin = (email: string, password: string) => {
-    console.log('Login attempt:', { email, password });
-    // In a real app, this would make an API call
-    onAuthSuccess();
-  };
-
-  const handleRegister = (email: string, password: string, username: string) => {
-    console.log('Register attempt:', { email, password, username });
-    // In a real app, this would make an API call
-    onAuthSuccess();
-  };
+  useEffect(() => {
+    setMode(location.pathname === '/register' ? 'register' : 'login');
+  }, [location]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-4 sm:p-6 lg:p-8">
       {/* Background decorations */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative z-10">
-        {isLogin ? (
-          <LoginForm
-            onLogin={handleLogin}
-            onSwitchToRegister={() => setIsLogin(false)}
-          />
+      <div className="relative z-10 w-full min-w-[280px] max-w-md mx-auto">
+        {mode === 'login' ? (
+          <LoginForm onAuthSuccess={onAuthSuccess} />
         ) : (
-          <RegisterForm
-            onRegister={handleRegister}
-            onSwitchToLogin={() => setIsLogin(true)}
-          />
+          <RegisterForm onAuthSuccess={onAuthSuccess} />
         )}
       </div>
     </div>

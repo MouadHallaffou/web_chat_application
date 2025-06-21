@@ -2,6 +2,7 @@ import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
+import Swal from 'sweetalert2';
 
 import { cn } from "@/lib/utils"
 
@@ -113,6 +114,51 @@ ToastDescription.displayName = ToastPrimitives.Description.displayName
 type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 
 type ToastActionElement = React.ReactElement<typeof ToastAction>
+
+type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+interface ToastOptions {
+  title?: string;
+  text: string;
+  type?: ToastType;
+  timer?: number;
+}
+
+export const showToast = ({ title, text, type = 'info', timer = 3000 }: ToastOptions) => {
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer);
+      toast.addEventListener('mouseleave', Swal.resumeTimer);
+    },
+  });
+
+  return Toast.fire({
+    icon: type,
+    title: title || text,
+    text: title ? text : undefined,
+  });
+};
+
+export const showError = (message: string) => {
+  return showToast({
+    title: 'Error',
+    text: message,
+    type: 'error',
+  });
+};
+
+export const showSuccess = (message: string) => {
+  return showToast({
+    title: 'Success',
+    text: message,
+    type: 'success',
+  });
+};
 
 export {
   type ToastProps,
