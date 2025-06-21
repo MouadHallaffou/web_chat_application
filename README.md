@@ -170,6 +170,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-Your Name - [@yourtwitter](https://twitter.com/yourtwitter) - email@example.com
+Mouad Hallaffou - [@MHallaffou](https://twitter.com/MHallaffou) - mouadhallaffou@gmail.com
 
-Project Link: [https://github.com/yourusername/chatbot](https://github.com/yourusername/chatbot)
+Project Link: [https://github.com/MouadHallaffou/web_chat_application](https://github.com/MouadHallaffou/web_chat_application)
