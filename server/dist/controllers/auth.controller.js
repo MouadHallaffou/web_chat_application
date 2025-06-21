@@ -130,7 +130,7 @@ const forgotPassword = async (req, res, next) => {
         // Find user
         const user = await user_model_1.User.findOne({ email });
         if (!user) {
-            throw new error_handler_1.AppError(404, 'User not found');
+            throw new error_handler_1.AppError(404, 'Aucun compte n\'existe avec cet email');
         }
         // Generate reset token
         const resetToken = crypto_1.default.randomBytes(32).toString('hex');
