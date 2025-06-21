@@ -2,6 +2,8 @@
 import React from 'react';
 import { Home, MessageCircle, Bell, Search, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 interface SidebarProps {
   activeTab: string;
@@ -9,6 +11,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
+  const { user } = useAuth();
   const menuItems = [
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'chat', icon: MessageCircle, label: 'Messages' },
@@ -18,12 +21,12 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   ];
 
   return (
-    <div className="w-16 lg:w-64 bg-slate-900 border-r border-slate-700 flex flex-col">
+    <div className="w-16 lg:w-64 bg-background border-r border-slate-700 flex flex-col transition-colors duration-200">
       {/* Logo */}
       <div className="p-4 border-b border-slate-700">
         <div className="hidden lg:block">
-          <h1 className="text-xl font-bold text-white">ChatApp</h1>
-          <p className="text-slate-400 text-sm">Stay connected</p>
+          <h1 className="text-xl font-bold text-foreground">ChatApp</h1>
+          <p className="text-muted-foreground text-sm">Stay connected</p>
         </div>
         <div className="lg:hidden flex justify-center">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -40,10 +43,10 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
             onClick={() => onTabChange(item.id)}
             className={cn(
               "w-full p-3 rounded-lg mb-2 flex items-center gap-3 transition-all duration-200",
-              "hover:bg-slate-800 hover:scale-105",
-              activeTab === item.id 
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg" 
-                : "text-slate-400 hover:text-white"
+              "hover:bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-lg hover:scale-105",
+              activeTab === item.id
+                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
             <item.icon size={20} />
@@ -52,21 +55,11 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
         ))}
       </nav>
 
-      {/* User Profile */}
-      <div className="p-4 border-t border-slate-700">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold">JD</span>
-          </div>
-          <div className="hidden lg:block">
-            <p className="text-white font-medium">John Doe</p>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-slate-400 text-sm">Online</span>
-            </div>
-          </div>
-        </div>
+      {/* Theme Toggle */}
+      <div className="">
+        <ThemeToggle />
       </div>
+
     </div>
   );
 };

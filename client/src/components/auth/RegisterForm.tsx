@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/components/ui/toast';
 import { motion } from 'framer-motion';
 import SocialLogin from './SocialLogin';
 
@@ -23,16 +23,16 @@ const RegisterForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Les mots de passe ne correspondent pas');
+      showError('Les mots de passe ne correspondent pas');
       return;
     }
     setIsLoading(true);
     try {
       await register(formData.username, formData.email, formData.password);
-      toast.success('Inscription réussie !');
+      showSuccess('Inscription réussie !');
       navigate('/login');
     } catch (error) {
-      toast.error('Erreur lors de l\'inscription');
+      showError('Erreur lors de l\'inscription');
     } finally {
       setIsLoading(false);
     }

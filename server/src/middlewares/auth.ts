@@ -36,7 +36,7 @@ export const authenticate = async (
     ) as JwtPayload;
 
     // Get user from token
-    const user = await User.findById(decoded.id).select('-password');
+    const user = await User.findById((decoded as any).userId).select('-password');
     if (!user) {
       throw new AppError(401, 'User not found');
     }

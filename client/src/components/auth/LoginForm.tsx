@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/components/ui/toast';
 import { motion } from 'framer-motion';
 import SocialLogin from './SocialLogin';
 
@@ -25,10 +25,10 @@ const LoginForm: React.FC = () => {
     setIsLoading(true);
     try {
       await login(formData.email, formData.password);
-      toast.success('Connexion réussie !');
+      showSuccess('Connexion réussie !');
       navigate('/chat');
     } catch (error) {
-      toast.error('Erreur lors de la connexion');
+      showError('Erreur lors de la connexion');
     } finally {
       setIsLoading(false);
     }

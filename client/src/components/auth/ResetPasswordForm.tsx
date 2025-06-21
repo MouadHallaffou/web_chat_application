@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Alert } from '../ui/alert';
+import { showSuccess, showError } from '@/components/ui/toast';
 
 const resetPasswordSchema = z.object({
   password: z
@@ -48,9 +49,11 @@ export const ResetPasswordForm: React.FC = () => {
         throw new Error('Invalid reset token');
       }
       await resetPassword(token, data.password);
-      navigate('/login', { state: { message: 'Password has been reset successfully' } });
-    } catch (err: Error | unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to reset password');
+      showSuccess('Mot de passe réinitialisé avec succès !');
+      navigate('/login');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Erreur lors de la réinitialisation du mot de passe');
+      showError(err.response?.data?.message || 'Erreur lors de la réinitialisation du mot de passe');
     } finally {
       setIsLoading(false);
     }

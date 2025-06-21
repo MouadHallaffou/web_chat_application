@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import { authService } from '../services/api';
+import api, { authService } from '../services/api';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 interface User {
   _id: string;
@@ -29,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -42,11 +44,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get('/auth/me');
+      const response = await api.get('/auth/me');
       setUser(response.data.data.user);
     } catch (err) {
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -94,10 +97,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       setError(null);
-      await axios.post('/auth/logout');
+      await authService.logout();
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
       setUser(null);
+      navigate('/login');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to logout');
       throw err;
@@ -155,4 +159,11 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}; 
+
+export const AuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
 }; 

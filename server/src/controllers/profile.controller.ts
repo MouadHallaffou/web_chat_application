@@ -8,7 +8,8 @@ import fs from 'fs';
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads/avatars';
+    const userId = req.user?._id?.toString() || 'unknown';
+    const uploadDir = `uploads/avatars/${userId}`;
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -46,7 +47,7 @@ export const updateProfile = async (
         return next(new AppError(400, err.message));
       }
 
-      const { username } = req.body;
+      const { username, email, password } = req.body;
       const userId = req.user._id;
 
       // Check if username is already taken
@@ -57,9 +58,24 @@ export const updateProfile = async (
         }
       }
 
+      // Check if email is already taken
+      if (email) {
+        const existingEmail = await User.findOne({ email, _id: { $ne: userId } });
+        if (existingEmail) {
+          return next(new AppError(400, 'Email is already taken'));
+        }
+      }
+
       // Update user profile
       const updateData: any = {};
       if (username) updateData.username = username;
+      if (email) updateData.email = email;
+      if (password && password.length >= 6) {
+        // Hash password before saving
+        const bcrypt = require('bcryptjs');
+        const salt = await bcrypt.genSalt(10);
+        updateData.password = await bcrypt.hash(password, salt);
+      }
       if (req.file) {
         // Delete old avatar if exists
         const user = await User.findById(userId);
@@ -69,7 +85,8 @@ export const updateProfile = async (
             fs.unlinkSync(oldAvatarPath);
           }
         }
-        updateData.avatar = req.file.path;
+        // Store relative path for client access
+        updateData.avatar = `/uploads/avatars/${userId}/${req.file.filename}`;
       }
 
       const updatedUser = await User.findByIdAndUpdate(
@@ -87,10 +104,17 @@ export const updateProfile = async (
       delete (userResponse as any).password;
       delete (userResponse as any).verificationToken;
 
+      // Générer un nouveau token si email ou mot de passe changé
+      let token = null;
+      if (email || password) {
+        token = updatedUser.generateAuthToken();
+      }
+
       res.status(200).json({
         status: 'success',
         data: {
           user: userResponse,
+          token,
           redirectTo: '/chat'
         }
       });
