@@ -1,112 +1,133 @@
-
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import SocialLogin from './SocialLogin';
 
-interface RegisterFormProps {
-  onRegister: (email: string, password: string, username: string) => void;
-  onSwitchToLogin: () => void;
-}
+const RegisterForm: React.FC = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
-const RegisterForm = ({ onRegister, onSwitchToLogin }: RegisterFormProps) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState('');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Les mots de passe ne correspondent pas');
       return;
     }
-    onRegister(email, password, username);
+    setIsLoading(true);
+    try {
+      await register(formData.username, formData.email, formData.password);
+      toast.success('Inscription réussie !');
+      navigate('/login');
+    } catch (error) {
+      toast.error('Erreur lors de l\'inscription');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="w-screen max-w-md mx-auto">
-      <div className="bg-slate-800/50 backdrop-blur-lg p-8 rounded-2xl border border-slate-700 shadow-2xl">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-xl">C</span>
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-          <p className="text-slate-400">Join the conversation today</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="username" className="text-white">Username</Label>
-            <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
-              placeholder="Choose a username"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
-              placeholder="Enter your email"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-white">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
-              placeholder="Create a password"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
-              placeholder="Confirm your password"
-              required
-            />
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-3 rounded-lg transition-all duration-200 hover:shadow-lg"
-          >
-            Create Account
-          </Button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-slate-400">
-            Already have an account?{' '}
-            <button
-              onClick={onSwitchToLogin}
-              className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
-            >
-              Sign in
-            </button>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="max-w-md w-full space-y-8 bg-card p-8 rounded-lg shadow-lg">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
+            Créer un compte
+          </h2>
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            Ou{' '}
+            <Link to="/login" className="font-medium text-primary hover:text-primary/80">
+              connectez-vous à votre compte existant
+            </Link>
           </p>
         </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm space-y-4">
+            <div>
+              <label htmlFor="username" className="sr-only">
+                Nom d'utilisateur
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                placeholder="Nom d'utilisateur"
+                value={formData.username}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Adresse email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                placeholder="Adresse email"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Mot de passe
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                placeholder="Mot de passe"
+                value={formData.password}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="sr-only">
+                Confirmer le mot de passe
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                placeholder="Confirmer le mot de passe"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isLoading ? 'Inscription en cours...' : 'S\'inscrire'}
+            </button>
+          </div>
+        </form>
+
+        <SocialLogin />
       </div>
     </div>
   );
