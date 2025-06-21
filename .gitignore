@@ -9,3 +9,6 @@
 .env.development
 .env.test
 .env.production
+/client/node_modules
+/server/node_modules   
+/server/node_modules/
