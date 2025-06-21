@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
+import { ResetPasswordForm } from './components/auth/ResetPasswordForm';
 import { ThemeToggle } from './components/ui/ThemeToggle';
 import { Toaster } from 'sonner';
 import ChatPage from './pages/ChatPage';
@@ -19,6 +20,7 @@ function App() {
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
             <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+            <Route path="/reset-password" element={<ResetPasswordForm />} />
             <Route path="/chat" element={<ChatPage/>}/> 
           </Routes>
           <ThemeToggle />

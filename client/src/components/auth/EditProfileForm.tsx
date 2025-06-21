@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import { Eye, EyeOff } from 'lucide-react';
 import { showSuccess, showError } from '@/components/ui/toast';
 
+type User = {
+  username: string;
+  email: string;
+  avatar?: string;
+};
 const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
-
 const EditProfileForm: React.FC = () => {
+  const navigate = useNavigate();
   const { user, login } = useAuth();
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -72,9 +78,10 @@ const EditProfileForm: React.FC = () => {
       setTimeout(() => {
         window.location.href = '/chat';
       }, 1200);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de la mise à jour du profil');
-      showError(err.response?.data?.message || 'Erreur lors de la mise à jour du profil');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour du profil';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setIsLoading(false);
     }

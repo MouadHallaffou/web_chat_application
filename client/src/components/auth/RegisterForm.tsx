@@ -4,35 +4,53 @@ import { useAuth } from '../../contexts/AuthContext';
 import { showSuccess, showError } from '@/components/ui/toast';
 import { motion } from 'framer-motion';
 import SocialLogin from './SocialLogin';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Eye, EyeOff } from 'lucide-react';
+
+const passwordHelp = "Le mot de passe doit contenir au moins 6 caractères, une majuscule, une minuscule, un chiffre et un symbole.";
+
+const registerSchema = z.object({
+  username: z.string().min(3, "Le nom d'utilisateur doit contenir au moins 3 caractères."),
+  email: z.string().email('Adresse email invalide.'),
+  password: z
+    .string()
+    .min(6, 'Le mot de passe doit contenir au moins 6 caractères.')
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).+$/,
+      'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un symbole.'
+    ),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Les mots de passe ne correspondent pas.',
+  path: ['confirmPassword'],
+});
 
 const RegisterForm: React.FC = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const {
+    register: formRegister,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      showError('Les mots de passe ne correspondent pas');
-      return;
-    }
+  const onSubmit = async (data: z.infer<typeof registerSchema>) => {
     setIsLoading(true);
     try {
-      await register(formData.username, formData.email, formData.password);
+      await register(data.username, data.email, data.password);
       showSuccess('Inscription réussie !');
       navigate('/login');
-    } catch (error) {
-      showError('Erreur lors de l\'inscription');
+    } catch (err: Error | unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      showError(error.response?.data?.message || 'Erreur lors de la création du compte.');
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +70,7 @@ const RegisterForm: React.FC = () => {
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="username" className="sr-only">
@@ -65,9 +83,11 @@ const RegisterForm: React.FC = () => {
                 required
                 className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 placeholder="Nom d'utilisateur"
-                value={formData.username}
-                onChange={handleChange}
+                {...formRegister('username')}
               />
+              {errors.username && (
+                <p className="text-red-500 text-sm mt-1">{errors.username.message as string}</p>
+              )}
             </div>
             <div>
               <label htmlFor="email" className="sr-only">
@@ -80,39 +100,58 @@ const RegisterForm: React.FC = () => {
                 required
                 className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
                 placeholder="Adresse email"
-                value={formData.email}
-                onChange={handleChange}
+                {...formRegister('email')}
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email.message as string}</p>
+              )}
             </div>
-            <div>
+            <div className="relative">
               <label htmlFor="password" className="sr-only">
                 Mot de passe
               </label>
               <input
                 id="password"
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                type={showPassword ? 'text' : 'password'}
+                {...formRegister('password')}
+                className={`appearance-none rounded-lg relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent pr-10 ${errors.password ? 'border-red-500' : ''}`}
                 placeholder="Mot de passe"
-                value={formData.password}
-                onChange={handleChange}
               />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                tabIndex={-1}
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+              <p className="text-xs text-muted-foreground mt-1">{passwordHelp}</p>
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password.message as string}</p>
+              )}
             </div>
-            <div>
+            <div className="relative">
               <label htmlFor="confirmPassword" className="sr-only">
                 Confirmer le mot de passe
               </label>
               <input
                 id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                type={showConfirm ? 'text' : 'password'}
+                {...formRegister('confirmPassword')}
+                className={`appearance-none rounded-lg relative block w-full px-3 py-2 border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
                 placeholder="Confirmer le mot de passe"
-                value={formData.confirmPassword}
-                onChange={handleChange}
               />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                tabIndex={-1}
+                onClick={() => setShowConfirm((v) => !v)}
+              >
+                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message as string}</p>
+              )}
             </div>
           </div>
 

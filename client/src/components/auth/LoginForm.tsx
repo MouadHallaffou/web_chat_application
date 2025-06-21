@@ -12,6 +12,7 @@ const LoginForm: React.FC = () => {
     rememberMe: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -27,11 +28,13 @@ const LoginForm: React.FC = () => {
       await login(formData.email, formData.password);
       showSuccess('Connexion réussie !');
       navigate('/chat');
-    } catch (error) {
-      showError('Erreur lors de la connexion');
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (err: Error | unknown) {
+          const error = err as { response?: { data?: { message?: string } } };
+          setError(error.response?.data?.message || 'Erreur lors de la connexion.');
+          showError(error.response?.data?.message || 'Erreur lors de la connexion.');;
+        } finally {
+          setIsLoading(false);
+        }
   };
 
   return (

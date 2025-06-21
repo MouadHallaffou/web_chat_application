@@ -88,8 +88,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       return response.data;
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to register');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to register');
       throw err;
     }
   };
@@ -102,8 +103,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       delete axios.defaults.headers.common['Authorization'];
       setUser(null);
       navigate('/login');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to logout');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to logout');
       throw err;
     }
   };
@@ -111,9 +113,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const forgotPassword = async (email: string) => {
     try {
       setError(null);
-      await axios.post('/auth/forgot-password', { email });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send reset instructions');
+      await authService.forgotPassword(email); 
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to send reset instructions');
       throw err;
     }
   };
@@ -121,9 +124,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (token: string, password: string) => {
     try {
       setError(null);
-      await axios.post('/auth/reset-password', { token, password });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to reset password');
+      await api.post('/auth/reset-password', { token, password });
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }, message?: string };
+      setError(error.response?.data?.message || error.message || 'Erreur lors de la réinitialisation du mot de passe');
       throw err;
     }
   };
@@ -132,8 +136,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setError(null);
       await axios.post('/auth/verify-email', { token });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to verify email');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to verify email');
       throw err;
     }
   };
