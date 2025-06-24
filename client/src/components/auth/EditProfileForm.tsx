@@ -94,8 +94,8 @@ const EditProfileForm: React.FC = () => {
     }
   };
   return (
-    <form className="bg-card p-8 rounded-lg shadow-lg w-full max-w-md" onSubmit={handleSubmit}>
-      <h2 className="text-2xl font-bold mb-4 text-foreground">Modifier mon profil</h2>
+    <form className="bg-card p-8 rounded-lg shadow-lg w-full max-w-full" onSubmit={handleSubmit}>
+      <h2 className="text-2xl font-bold mb-4 text-foreground text-center">Modifier mon profil</h2>
       {/* {error && <p className="text-red-500 mb-2">{error}</p>}
       {success && <p className="text-green-500 mb-2">{success}</p>} */}
       <div className="mb-4">
@@ -121,7 +121,7 @@ const EditProfileForm: React.FC = () => {
         {fieldErrors.email && <p className="text-red-500 text-sm mt-1">{fieldErrors.email}</p>}
       </div>
       <div className="mb-4 flex items-center gap-0">
-        <div className="flex-1">
+        <div className="flex-2">
           <label className="block text-sm font-medium mb-1 text-muted-foreground">Avatar</label>
           <input type="file" accept="image/*" onChange={handleAvatarChange} />
         </div>
@@ -129,49 +129,51 @@ const EditProfileForm: React.FC = () => {
           <img
             src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}${user.avatar}`}
             alt="Ancien avatar"
-            className="w-8 h-8 rounded-full object-cover border"
+            className="w-12 h-12 rounded-full object-cover border"
           />
         )}
       </div>
-      <div className="mb-4 relative">
-        <label className="block text-sm font-medium mb-1 text-muted-foreground">Nouveau mot de passe</label>
-        <input
-          type={showPassword ? 'text' : 'password'}
-          className="w-full px-3 py-2 border rounded-lg bg-background text-foreground pr-10"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          placeholder="Laisser vide pour ne pas changer"
-        />
-        <button
-          type="button"
-          className="absolute right-3 top-8 text-muted-foreground"
-          tabIndex={-1}
-          onClick={() => setShowPassword((v) => !v)}
-        >
-          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-        {fieldErrors.password && <p className="text-red-500 text-sm mt-1">{fieldErrors.password}</p>}
+      <div className="mb-4 flex gap-4 flex-col w-full">
+        <div className="relative">
+          <label className="block text-sm font-medium mb-1 text-muted-foreground">Nouveau mot de passe</label>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            className="w-full px-3 py-2 border rounded-lg bg-background text-foreground pr-10"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="Laisser vide pour ne pas changer"
+          />
+          <button
+            type="button"
+            className="absolute right-3 top-[34px] text-muted-foreground"
+            tabIndex={-1}
+            onClick={() => setShowPassword((v) => !v)}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+          {fieldErrors.password && <p className="text-red-500 text-sm mt-1">{fieldErrors.password}</p>}
+        </div>
+        <div className="relative">
+          <label className="block text-sm font-medium mb-1 text-muted-foreground">Confirmer le mot de passe</label>
+          <input
+            type={showConfirm ? 'text' : 'password'}
+            className="w-full px-3 py-2 border rounded-lg bg-background text-foreground pr-10"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            placeholder="Laisser vide pour ne pas changer"
+          />
+          <button
+            type="button"
+            className="absolute right-3 top-[34px] text-muted-foreground"
+            tabIndex={-1}
+            onClick={() => setShowConfirm((v) => !v)}
+          >
+            {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+          {fieldErrors.confirmPassword && <p className="text-red-500 text-sm mt-1">{fieldErrors.confirmPassword}</p>}
+        </div>
       </div>
-      <div className="mb-4 relative">
-        <label className="block text-sm font-medium mb-1 text-muted-foreground">Confirmer le mot de passe</label>
-        <input
-          type={showConfirm ? 'text' : 'password'}
-          className="w-full px-3 py-2 border rounded-lg bg-background text-foreground pr-10"
-          value={confirmPassword}
-          onChange={e => setConfirmPassword(e.target.value)}
-          placeholder="Laisser vide pour ne pas changer"
-        />
-        <button
-          type="button"
-          className="absolute right-3 top-8 text-muted-foreground"
-          tabIndex={-1}
-          onClick={() => setShowConfirm((v) => !v)}
-        >
-          {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-        {fieldErrors.confirmPassword && <p className="text-red-500 text-sm mt-1">{fieldErrors.confirmPassword}</p>}
-      </div>
-      <div className="flex gap-4">
+      <div className="flex gap-4 max-w-sm mx-start">
         <button
           type="submit"
           className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"

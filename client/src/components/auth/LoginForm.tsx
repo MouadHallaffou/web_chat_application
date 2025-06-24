@@ -26,7 +26,7 @@ const LoginForm: React.FC = () => {
     setIsLoading(true);
     try {
       await login(formData.email, formData.password);
-      showSuccess('Connexion réussie !');
+      // showSuccess('Connexion réussie !');
       navigate('/chat');
     } catch (err: Error | unknown) {
           const error = err as { response?: { data?: { message?: string } } };

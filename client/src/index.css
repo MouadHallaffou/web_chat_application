@@ -99,3 +99,40 @@
     @apply bg-background text-foreground;
   }
 }
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #bdc4ce transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 1px;
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 6px;
+  opacity: 0.5;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #46515f;
+  opacity: 1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark .custom-scrollbar {
+  scrollbar-color: #49505a transparent;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #556173;
+}
+
+.dark .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #8390a1;
+}

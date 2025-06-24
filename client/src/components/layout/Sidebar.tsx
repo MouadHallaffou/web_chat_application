@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Home, MessageCircle, Bell, Search, Settings } from 'lucide-react';
+import { Home, MessageCircle, Bell, Settings, PackageSearchIcon, Users, UserPlus, FileText, HelpCircle, LifeBuoy, PhoneCall, MessageSquare, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '../ui/ThemeToggle';
@@ -16,12 +15,20 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'chat', icon: MessageCircle, label: 'Messages' },
     { id: 'notifications', icon: Bell, label: 'Notifications' },
-    { id: 'search', icon: Search, label: 'Search' },
-    { id: 'settings', icon: Settings, label: 'Settings' }
+    { id: 'ai assistant', icon: PackageSearchIcon, label: 'AI Assistant' },
+    { id: 'friends', icon: Users, label: 'Friends' },
+    { id: 'groups', icon: UserPlus, label: 'Groups' },
+    { id: 'pages', icon: FileText, label: 'Pages' },
+    { id: 'settings', icon: Settings, label: 'Settings' },
+    { id: 'help', icon: HelpCircle, label: 'Help' },
+    { id: 'support', icon: LifeBuoy, label: 'Support' },
+    { id: 'contact', icon: PhoneCall, label: 'Contact' },
+    { id: 'feedback', icon: MessageSquare, label: 'Feedback' },
+    { id: 'language', icon: Globe, label: 'Language' }
   ];
 
   return (
-    <div className="w-16 lg:w-64 bg-background border-r border-slate-700 flex flex-col transition-colors duration-200">
+    <div className="w-16 lg:w-64 bg-background border-r border-slate-700 flex flex-col min-h-0 transition-colors duration-200">
       {/* Logo */}
       <div className="p-4 border-b border-slate-700">
         <div className="hidden lg:block">
@@ -36,7 +43,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2">
+      <nav className="flex-1 p-2 custom-scrollbar overflow-y-auto">
         {menuItems.map((item) => (
           <button
             key={item.id}

@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 const SocialLogin: React.FC = () => {
   const handleSocialLogin = (provider: string) => {
     try {
-      window.location.href = `/api/auth/${provider}`;
+      window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
     } catch (error) {
       toast.error(`Failed to connect with ${provider}`);
     }
