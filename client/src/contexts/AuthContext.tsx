@@ -42,6 +42,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      checkAuth();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   const checkAuth = async () => {
     try {
       const response = await api.get('/auth/me');

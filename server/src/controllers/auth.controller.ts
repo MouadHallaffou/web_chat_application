@@ -25,21 +25,19 @@ const isProfileComplete = (user: IUser): boolean => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: '/api/auth/google/callback'
+  callbackURL: process.env.GOOGLE_CALLBACK_URL!
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     let user = await User.findOne({ email: profile.emails?.[0].value });
-    
     if (!user) {
       user = await User.create({
         email: profile.emails?.[0].value,
         username: profile.displayName,
-        isVerified: true, // Auto-verify social logins
-        password: Math.random().toString(36).slice(-8), // Random password for social users
+        isVerified: true,
+        password: Math.random().toString(36).slice(-8), // mot de passe aléatoire
         status: 'online'
       });
     }
-    
     return done(null, user);
   } catch (error) {
     return done(error as Error);
@@ -178,13 +176,16 @@ export const login = async (
 // Social login routes
 export const googleAuth = passport.authenticate('google', { scope: ['profile', 'email'] });
 
-export const googleCallback = passport.authenticate('google', { 
-  failureRedirect: '/login',
-  session: false 
-}, (req, res) => {
-  const token = (req.user as any).generateAuthToken();
-  res.redirect(`/auth/success?token=${token}`);
-});
+export const googleCallback = [
+  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+  (req, res) => {
+    if (!req.user) {
+      return res.status(401).send('User not found after Google auth');
+    }
+    const token = (req.user as any).generateAuthToken();
+    res.redirect(`${process.env.CLIENT_URL}/chat?token=${token}`);
+  }
+];
 
 export const githubAuth = passport.authenticate('github', { scope: ['user:email'] });
 

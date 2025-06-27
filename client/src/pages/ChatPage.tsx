@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import FriendsList from '@/components/chat/FriendsList';
 import ChatWindow from '@/components/chat/ChatWindow';
@@ -6,6 +6,7 @@ import { useAuth, AuthGuard } from '@/contexts/AuthContext';
 import EditProfileForm from '@/components/auth/EditProfileForm';
 import { showToast } from '@/components/ui/toast';
 import Swal from 'sweetalert2';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface Friend {
   id: string;
@@ -84,6 +85,18 @@ const ChatPage = () => {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token');
+    if (token) {
+      localStorage.setItem('token', token);
+      // Optionnel : fetch user info, etc.
+      navigate('/chat', { replace: true }); // Nettoie l'URL
+    }
+  }, [location, navigate]);
 
   const handleSelectFriend = (friend: Friend) => {
     setSelectedFriend(friend);
@@ -229,7 +242,7 @@ const ChatPage = () => {
             </div>
           )}
           {activeTab === 'settings' && (
-            <div className="flex-1 flex items-center justify-center bg-background">
+            <div className="flex-1 flex items-center justify-center bg-background custom-scrollbar overflow-y-auto">
               <EditProfileForm />
             </div>
           )}
