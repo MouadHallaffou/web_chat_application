@@ -73,7 +73,7 @@ export const authService = {
     return response.data;
   },
   forgotPassword: async (email: string) => {
-    const response = await api.post('/auth/forgot-password', { email });
+    const response = await api.post('/forgot-password', { email });
     return response.data;
   },
 };

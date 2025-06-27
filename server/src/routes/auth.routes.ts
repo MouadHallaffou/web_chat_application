@@ -8,6 +8,11 @@ import {
   verifyEmail,
   googleAuth,
   googleCallback,
+  githubAuth,
+  githubCallback,
+  linkedinAuth,
+  linkedinCallback,
+  getMe
 } from '../controllers/auth.controller';
 import { authenticate } from '../middlewares/auth';
 
@@ -21,18 +26,19 @@ router.post('/reset-password', resetPassword);
 router.post('/verify-email', verifyEmail);
 
 // Google OAuth routes
-router.get('/google', googleAuth);
-router.get('/google/callback', googleCallback);
+router.get('/auth/google', googleAuth);
+router.get('/auth/google/callback', googleCallback);
+
+// GitHub OAuth routes
+router.get('/auth/github', githubAuth);
+router.get('/auth/github/callback', githubCallback);
+
+// LinkedIn OAuth routes
+router.get('/auth/linkedin', linkedinAuth);
+router.get('/auth/linkedin/callback', linkedinCallback);
 
 // Protected routes
-router.post('/logout', authenticate, logout);
-router.get('/me', authenticate, async (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    data: {
-      user: req.user,
-    },
-  });
-});
+router.post('/auth/logout', authenticate, logout);
+router.get('/auth/me', authenticate, getMe);
 
 export default router; 

@@ -3,9 +3,17 @@ import { FaGoogle, FaGithub, FaLinkedin } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+const providerUrls: Record<string, string> = {
+  google: `${API_BASE_URL}/auth/google`,
+  github: `${API_BASE_URL}/auth/github`,
+  linkedin: `${API_BASE_URL}/auth/linkedin`
+};
+
 const SocialLogin: React.FC = () => {
   const handleSocialLogin = (provider: string) => {
-    window.location.href = "http://localhost:5000/api/auth/google";
+    window.location.href = providerUrls[provider];
   };
 
   const socialButtons = [

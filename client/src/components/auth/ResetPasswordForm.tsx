@@ -63,6 +63,9 @@ export const ResetPasswordForm: React.FC = () => {
     }
   };
 
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md mx-auto p-4 sm:p-6 bg-card rounded-lg shadow-lg">

@@ -51,20 +51,39 @@ passport.use(new GitHubStrategy({
   callbackURL: '/api/auth/github/callback'
 }, async (accessToken, refreshToken, profile, done) => {
   try {
-    let user = await User.findOne({ email: profile.emails?.[0].value });
-    
+    console.log('GitHub profile:', profile);
+    let email = profile.emails?.[0]?.value;
+
+    if (!email) {
+      const fetch = require('node-fetch');
+      const res = await fetch('https://api.github.com/user/emails', {
+        headers: { 'Authorization': `token ${accessToken}` }
+      });
+      const emails = await res.json();
+      console.log('GitHub emails API response:', emails);
+      email = Array.isArray(emails)
+        ? emails.find((e) => e.primary && e.verified)?.email
+        : undefined;
+    }
+
+    if (!email) {
+      console.error('No email found in GitHub profile or API');
+      return done(new Error('No email found in GitHub profile'), null);
+    }
+
+    let user = await User.findOne({ email });
     if (!user) {
       user = await User.create({
-        email: profile.emails?.[0].value,
-        username: profile.username,
-        isVerified: true, // Auto-verify social logins
-        password: Math.random().toString(36).slice(-8), // Random password for social users
+        email,
+        username: profile.username || email.split('@')[0],
+        isVerified: true,
+        password: Math.random().toString(36).slice(-8),
         status: 'online'
       });
     }
-    
     return done(null, user);
   } catch (error) {
+    console.error('GitHub OAuth error:', error);
     return done(error as Error);
   }
 }));
@@ -189,13 +208,16 @@ export const googleCallback = [
 
 export const githubAuth = passport.authenticate('github', { scope: ['user:email'] });
 
-export const githubCallback = passport.authenticate('github', { 
-  failureRedirect: '/login',
-  session: false 
-}, (req, res) => {
-  const token = (req.user as any).generateAuthToken();
-  res.redirect(`/auth/success?token=${token}`);
-});
+export const githubCallback = [
+  passport.authenticate('github', { failureRedirect: '/login', session: false }),
+  (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).send('User not found after GitHub auth');
+    }
+    const token = (req.user as any).generateAuthToken();
+    res.redirect(`${process.env.CLIENT_URL}/chat?token=${token}`);
+  }
+];
 
 export const linkedinAuth = passport.authenticate('linkedin');
 
@@ -383,4 +405,13 @@ export const logout = async (
   } catch (error) {
     next(error);
   }
+};
+
+export const getMe = (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user: req.user
+    }
+  });
 }; 
