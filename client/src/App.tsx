@@ -8,7 +8,7 @@ import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
 import { ResetPasswordForm } from './components/auth/ResetPasswordForm';
 import { ThemeToggle } from './components/ui/ThemeToggle';
 import { Toaster } from 'sonner';
-import ChatPage from './pages/ChatPage';
+import ProtectedChatPage from './pages/ChatPage';
 
 function App() {
   return (
@@ -21,7 +21,7 @@ function App() {
             <Route path="/register" element={<RegisterForm />} />
             <Route path="/forgot-password" element={<ForgotPasswordForm />} />
             <Route path="/reset-password" element={<ResetPasswordForm />} />
-            <Route path="/chat" element={<ChatPage/>}/> 
+            <Route path="/chat" element={<ProtectedChatPage/>}/> 
           </Routes>
           <ThemeToggle />
           <Toaster position="top-right" />

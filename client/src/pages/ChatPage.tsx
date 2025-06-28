@@ -143,6 +143,10 @@ const ChatPage = () => {
     }
   };
 
+  const handleCancelEdit = () => {
+    setActiveTab('chat');
+  };
+
   return (
     <div className="h-screen min-h-0 bg-background text-foreground flex transition-colors duration-200 overflow-hidden">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
@@ -243,7 +247,7 @@ const ChatPage = () => {
           )}
           {activeTab === 'settings' && (
             <div className="flex-1 flex items-center justify-center bg-background custom-scrollbar overflow-y-auto">
-              <EditProfileForm />
+              <EditProfileForm onCancel={handleCancelEdit} />
             </div>
           )}
           {activeTab === 'home' && (

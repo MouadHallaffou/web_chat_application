@@ -10,8 +10,13 @@ type User = {
   email: string;
   avatar?: string;
 };
+
+interface EditProfileFormProps {
+  onCancel?: () => void;
+}
+
 const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
-const EditProfileForm: React.FC = () => {
+const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
   const navigate = useNavigate();
   const { user, login } = useAuth();
   const [username, setUsername] = useState(user?.username || '');
@@ -87,10 +92,10 @@ const EditProfileForm: React.FC = () => {
     }
   };
   const handleCancel = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
+    if (onCancel) {
+      onCancel();
     } else {
-      navigate('/');
+      navigate('/chat');
     }
   };
   return (
