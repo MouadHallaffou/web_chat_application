@@ -7,6 +7,7 @@ interface User {
   _id: string;
   username: string;
   email: string;
+  avatar?: string;
   isVerified: boolean;
   status: 'online' | 'offline' | 'away';
   lastSeen: Date;

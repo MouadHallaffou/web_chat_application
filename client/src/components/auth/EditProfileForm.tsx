@@ -11,12 +11,8 @@ type User = {
   avatar?: string;
 };
 
-interface EditProfileFormProps {
-  onCancel?: () => void;
-}
-
 const validateEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
-const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
+const EditProfileForm: React.FC = () => {
   const navigate = useNavigate();
   const { user, login } = useAuth();
   const [username, setUsername] = useState(user?.username || '');
@@ -81,7 +77,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
       setSuccess('Profil mis à jour avec succès !');
       showSuccess('Profil mis à jour avec succès !');
       setTimeout(() => {
-        window.location.href = '/chat';
+        window.location.href = '../home';
       }, 1200);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour du profil';
@@ -92,11 +88,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
     }
   };
   const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    } else {
-      navigate('/chat');
-    }
+    navigate('../home');
   };
   return (
     <form className="bg-card p-8 rounded-lg shadow-lg w-full max-w-full" onSubmit={handleSubmit}>

@@ -3,29 +3,38 @@ import { Home, MessageCircle, Bell, Settings, PackageSearchIcon, Users, UserPlus
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-interface SidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-}
-
-const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
+const Sidebar = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const menuItems = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'chat', icon: MessageCircle, label: 'Messages' },
-    { id: 'notifications', icon: Bell, label: 'Notifications' },
-    { id: 'ai assistant', icon: PackageSearchIcon, label: 'AI Assistant' },
-    { id: 'friends', icon: Users, label: 'Friends' },
-    { id: 'groups', icon: UserPlus, label: 'Groups' },
-    { id: 'pages', icon: FileText, label: 'Pages' },
-    { id: 'settings', icon: Settings, label: 'Settings' },
-    { id: 'help', icon: HelpCircle, label: 'Help' },
-    { id: 'support', icon: LifeBuoy, label: 'Support' },
-    { id: 'contact', icon: PhoneCall, label: 'Contact' },
-    { id: 'feedback', icon: MessageSquare, label: 'Feedback' },
-    { id: 'language', icon: Globe, label: 'Language' }
+    { id: 'home', path: '/home', icon: Home, label: 'Home' },
+    { id: 'chat', path: '/chat', icon: MessageCircle, label: 'Messages' },
+    { id: 'notifications', path: '/notifications', icon: Bell, label: 'Notifications' },
+    { id: 'ai-assistant', path: '/ai-assistant', icon: PackageSearchIcon, label: 'AI Assistant' },
+    { id: 'friends', path: '/friends', icon: Users, label: 'Friends' },
+    { id: 'groups', path: '/groups', icon: UserPlus, label: 'Groups' },
+    { id: 'pages', path: '/pages', icon: FileText, label: 'Pages' },
+    { id: 'settings', path: '/settings', icon: Settings, label: 'Settings' },
+    { id: 'help', path: '/help', icon: HelpCircle, label: 'Help' },
+    { id: 'support', path: '/support', icon: LifeBuoy, label: 'Support' },
+    { id: 'contact', path: '/contact', icon: PhoneCall, label: 'Contact' },
+    { id: 'feedback', path: '/feedback', icon: MessageSquare, label: 'Feedback' },
+    { id: 'language', path: '/language', icon: Globe, label: 'Language' }
   ];
+
+  const handleTabClick = (path: string) => {
+    navigate(path);
+  };
+
+  const getActiveTab = () => {
+    const currentPath = location.pathname;
+    const menuItem = menuItems.find(item => item.path === currentPath);
+    return menuItem ? menuItem.id : 'home';
+  };
 
   return (
     <div className="w-16 lg:w-64 bg-background border-r border-slate-700 flex flex-col min-h-0 transition-colors duration-200">
@@ -47,11 +56,11 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
         {menuItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => onTabChange(item.id)}
+            onClick={() => handleTabClick(item.path)}
             className={cn(
               "w-full p-3 rounded-lg mb-2 flex items-center gap-3 transition-all duration-200",
               "hover:bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-lg hover:scale-105",
-              activeTab === item.id
+              getActiveTab() === item.id
                 ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg"
                 : "text-muted-foreground hover:text-foreground"
             )}
