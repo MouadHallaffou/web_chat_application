@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import FriendsList from '@/components/chat/FriendsList';
 import ChatWindow from '@/components/chat/ChatWindow';
+import { useChatStore } from '@/features/chat/store';
 
 interface Friend {
   id: string;
@@ -11,69 +12,11 @@ interface Friend {
   unreadCount?: number;
 }
 
-const mockFriends: Friend[] = [
-  {
-    id: '1',
-    name: 'Alice Johnson',
-    avatar: 'AJ',
-    isOnline: true,
-    lastMessage: 'Hey! How are you doing?',
-    unreadCount: 2
-  },
-  {
-    id: '2',
-    name: 'Bob Smith',
-    avatar: 'BS',
-    isOnline: false,
-    lastMessage: 'Thanks for the help earlier',
-  },
-  {
-    id: '3',
-    name: 'Carol White',
-    avatar: 'CW',
-    isOnline: true,
-    lastMessage: 'Are we still on for tomorrow?',
-    unreadCount: 1
-  },
-  {
-    id: '4',
-    name: 'David Brown',
-    avatar: 'DB',
-    isOnline: true,
-    lastMessage: 'Great work on the project!',
-  },
-  {
-    id: '5',
-    name: 'Eve Davis',
-    avatar: 'ED',
-    isOnline: true,
-    lastMessage: 'Looking forward to our meeting!',
-  },
-  {
-    id: '6',
-    name: 'Frank Wilson',
-    avatar: 'FW',
-    isOnline: false,
-    lastMessage: 'Let me know when you are free',
-  },
-  {
-    id: '7',
-    name: 'Grace Lee',
-    avatar: 'GL',
-    isOnline: true,
-    lastMessage: 'Can you send me the files?',
-  },
-  {
-    id: '8',
-    name: 'Hank Miller',
-    avatar: 'HM',
-    isOnline: false,
-    lastMessage: 'I will call you later',
-  }
-];
-
 const ChatPage = () => {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+
+  // Utiliser les amis dynamiques du store Zustand
+  const { friends, isLoading } = useChatStore();
 
   const handleSelectFriend = (friend: Friend) => {
     setSelectedFriend(friend);
@@ -82,7 +25,7 @@ const ChatPage = () => {
   return (
     <div className="flex flex-1 flex-row min-h-0">
       <FriendsList
-        friends={mockFriends}
+        friends={friends}
         onSelectFriend={handleSelectFriend}
         selectedFriend={selectedFriend || undefined}
       />
