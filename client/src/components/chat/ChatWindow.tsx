@@ -27,32 +27,38 @@ const ChatWindow = ({ selectedFriend }: ChatWindowProps) => {
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Utiliser le store Zustand pour les messages
+  // Utiliser le store Zustand pour les messages et conversations
   const { 
     messages, 
     isLoading, 
     error, 
     sendMessage, 
     loadMessages, 
-    initializeSocketListeners 
+    initializeSocketListeners,
+    conversations
   } = useChatStore();
 
   // Utiliser le contexte d'authentification
   const { user } = useAuth();
+
+  // Trouver la conversation correspondante (1-1) dans le store
+  const conversation = conversations.find(conv =>
+    conv.participants.length === 2 &&
+    conv.participants.includes(user?._id) &&
+    conv.participants.includes(selectedFriend.id)
+  );
 
   // Initialiser les listeners WebSocket au montage du composant
   useEffect(() => {
     initializeSocketListeners();
   }, [initializeSocketListeners]);
 
-  // Charger les messages quand un ami est sélectionné
+  // Charger les messages quand une conversation existe et un ami est sélectionné
   useEffect(() => {
-    if (selectedFriend?.id) {
-      // Pour l'instant, on utilise l'ID de l'ami comme conversationId
-      // Dans une vraie application, vous auriez besoin de créer/gérer les conversations
-      loadMessages(selectedFriend.id);
+    if (selectedFriend?.id && conversation?.id) {
+      loadMessages(conversation.id);
     }
-  }, [selectedFriend?.id, loadMessages]);
+  }, [selectedFriend?.id, conversation?.id, loadMessages]);
 
   // Scroll automatique vers le bas quand de nouveaux messages arrivent
   useEffect(() => {
@@ -122,6 +128,10 @@ const ChatWindow = ({ selectedFriend }: ChatWindowProps) => {
         ) : error ? (
           <div className="flex justify-center">
             <div className="text-red-500">Error: {error}</div>
+          </div>
+        ) : !conversation ? (
+          <div className="flex justify-center">
+            <div className="text-muted-foreground">Aucune conversation trouvée avec cet ami.</div>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex justify-center">
