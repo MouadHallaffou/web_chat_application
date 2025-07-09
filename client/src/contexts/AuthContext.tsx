@@ -1,3 +1,14 @@
+/*
+ * Fichier : client/src/contexts/AuthContext.tsx
+ * Rôle : Fournit le contexte d'authentification à toute l'application React.
+ * - Gère l'état utilisateur, le chargement, les erreurs, et les actions d'authentification (login, register, logout, etc.).
+ * - Vérifie et stocke le token JWT dans le localStorage.
+ * - Fournit des gardiens de routes (AuthGuard, PublicRoute) pour protéger les pages.
+ * Dépendances :
+ * - axios, api, authService : pour les requêtes API.
+ * - react-router-dom : pour la navigation après login/logout.
+ * - User : interface utilisateur.
+ */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import api, { authService } from '../services/api';
@@ -46,11 +57,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
-    if (token) {
+    const isResetPassword = window.location.pathname === '/reset-password';
+    
+    console.log('AuthContext: useEffect triggered');
+    console.log('Current pathname:', window.location.pathname);
+    console.log('Token from URL:', token);
+    console.log('Is reset password page:', isResetPassword);
+    
+    // Ne traiter le token que s'il ne s'agit pas d'une page de reset password
+    if (token && !isResetPassword) {
+      console.log('Processing token as auth token');
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       checkAuth();
       window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (!token) {
+      console.log('No token found, setting loading to false');
+      setLoading(false);
+    } else {
+      // Si c'est un token de reset password, ne pas le traiter comme token d'auth
+      console.log('Token is for reset password, not processing as auth token');
+      setLoading(false);
     }
   }, []);
 
@@ -182,5 +209,12 @@ export const AuthGuard: React.FC<{ children: React.ReactNode }> = ({ children })
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
+
+export const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) return <Navigate to="/home" replace />;
   return <>{children}</>;
 }; 

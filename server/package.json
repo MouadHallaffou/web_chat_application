@@ -9,7 +9,9 @@
         "build": "tsc",
         "lint": "eslint . --ext .ts",
         "test": "jest",
-        "init:db": "ts-node src/scripts/init-db.ts"
+            "init:db": "ts-node src/scripts/init-db.ts",
+    "init-schemas": "ts-node src/scripts/init-schemas.ts",
+    "seed": "ts-node src/scripts/seed-data.ts"
     },
     "keywords": [
         "express",
@@ -21,6 +23,7 @@
     "license": "MIT",
     "dependencies": {
         "@types/multer": "^1.4.13",
+        "@types/socket.io": "^3.0.1",
         "bcryptjs": "^2.4.3",
         "cors": "^2.8.5",
         "dotenv": "^16.0.3",
@@ -32,7 +35,8 @@
         "passport": "^0.7.0",
         "passport-github2": "^0.1.12",
         "passport-google-oauth20": "^2.0.0",
-        "passport-linkedin-oauth2": "^2.0.0"
+        "passport-linkedin-oauth2": "^2.0.0",
+        "socket.io": "^4.8.1"
     },
     "devDependencies": {
         "@types/bcryptjs": "^2.4.2",

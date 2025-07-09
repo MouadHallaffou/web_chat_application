@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Mic, Search, Video } from 'lucide-react';
+import { useChatStore } from '@/features/chat/store';
+import { socketService } from '@/services/socket.service';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   id: string;
@@ -22,70 +25,53 @@ interface ChatWindowProps {
 
 const ChatWindow = ({ selectedFriend }: ChatWindowProps) => {
   const [newMessage, setNewMessage] = useState('');
-  const [messages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hey! How are you doing today?',
-      sender: 'other',
-      timestamp: new Date(Date.now() - 3600000),
-      type: 'text'
-    },
-    {
-      id: '2',
-      text: 'I\'m doing great! Just finished working on a new project. How about you?',
-      sender: 'me',
-      timestamp: new Date(Date.now() - 3300000),
-      type: 'text'
-    },
-    {
-      id: '3',
-      text: 'That sounds awesome! I\'d love to hear more about it.',
-      sender: 'other',
-      timestamp: new Date(Date.now() - 3000000),
-      type: 'text'
-    },
-    {
-      id: '4',
-      text: 'Sure! It\'s a real-time chat application with video calling features. Pretty excited about it!',
-      sender: 'me',
-      timestamp: new Date(Date.now() - 2700000),
-      type: 'text'
-    },
-    {
-      id: '5',
-      text: 'Wow, that sounds amazing! I can\'t wait to try it out.',
-      sender: 'other',
-      timestamp: new Date(Date.now() - 2400000),
-      type: 'text'
-    },
-    {
-      id: '6',
-      text: 'Here\'s a screenshot of the UI I designed for it.',
-      sender: 'me',
-      timestamp: new Date(Date.now() - 2100000),
-      type: 'image'
-    },
-    {
-      id: '7',
-      text: 'Looks great! I love the color scheme you chose.',
-      sender: 'other',
-      timestamp: new Date(Date.now() - 1800000),
-      type: 'text'
-    },
-    {
-      id: '8',
-      text: 'Thanks! I wanted something modern and sleek.',
-      sender: 'me',
-      timestamp: new Date(Date.now() - 1500000),
-      type: 'text'
-    },
-  ]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Utiliser le store Zustand pour les messages
+  const { 
+    messages, 
+    isLoading, 
+    error, 
+    sendMessage, 
+    loadMessages, 
+    initializeSocketListeners 
+  } = useChatStore();
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  // Utiliser le contexte d'authentification
+  const { user } = useAuth();
+
+  // Initialiser les listeners WebSocket au montage du composant
+  useEffect(() => {
+    initializeSocketListeners();
+  }, [initializeSocketListeners]);
+
+  // Charger les messages quand un ami est sélectionné
+  useEffect(() => {
+    if (selectedFriend?.id) {
+      // Pour l'instant, on utilise l'ID de l'ami comme conversationId
+      // Dans une vraie application, vous auriez besoin de créer/gérer les conversations
+      loadMessages(selectedFriend.id);
+    }
+  }, [selectedFriend?.id, loadMessages]);
+
+  // Scroll automatique vers le bas quand de nouveaux messages arrivent
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      console.log('Sending message:', newMessage);
-      setNewMessage('');
+    if (newMessage.trim() && selectedFriend?.id) {
+      try {
+        await sendMessage({
+          content: newMessage,
+          receiverId: selectedFriend.id,
+          type: 'text'
+        });
+        setNewMessage('');
+      } catch (error) {
+        console.error('Failed to send message:', error);
+      }
     }
   };
 
@@ -129,27 +115,47 @@ const ChatWindow = ({ selectedFriend }: ChatWindowProps) => {
       </div>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                message.sender === 'me'
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                  : 'bg-muted text-foreground dark:bg-slate-700'
-              }`}
-            >
-              <p className="text-sm">{message.text}</p>
-              <p className={`text-xs mt-1 ${
-                message.sender === 'me' ? 'text-blue-100' : 'text-muted-foreground'
-              }`}>
-                {formatTime(message.timestamp)}
-              </p>
-            </div>
+        {isLoading ? (
+          <div className="flex justify-center">
+            <div className="text-muted-foreground">Loading messages...</div>
           </div>
-        ))}
+        ) : error ? (
+          <div className="flex justify-center">
+            <div className="text-red-500">Error: {error}</div>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex justify-center">
+            <div className="text-muted-foreground">No messages yet. Start a conversation!</div>
+          </div>
+        ) : (
+          messages.map((message) => {
+            // Déterminer si le message est de l'utilisateur actuel
+            const isOwnMessage = message.senderId === user?._id;
+            
+            return (
+              <div
+                key={message.id}
+                className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                    isOwnMessage
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
+                      : 'bg-muted text-foreground dark:bg-slate-700'
+                  }`}
+                >
+                  <p className="text-sm">{message.content}</p>
+                  <p className={`text-xs mt-1 ${
+                    isOwnMessage ? 'text-blue-100' : 'text-muted-foreground'
+                  }`}>
+                    {formatTime(new Date(message.timestamp))}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
       </div>
       {/* Message Input */}
       <div className="p-4 border-t border-border bg-background dark:bg-slate-800 dark:border-slate-800">

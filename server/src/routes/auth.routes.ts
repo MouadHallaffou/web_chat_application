@@ -26,19 +26,19 @@ router.post('/reset-password', resetPassword);
 router.post('/verify-email', verifyEmail);
 
 // Google OAuth routes
-router.get('/auth/google', googleAuth);
-router.get('/auth/google/callback', googleCallback);
+router.get('/google', googleAuth);
+router.get('/google/callback', googleCallback);
 
 // GitHub OAuth routes
-router.get('/auth/github', githubAuth);
-router.get('/auth/github/callback', githubCallback);
+router.get('/github', githubAuth);
+router.get('/github/callback', githubCallback);
 
 // LinkedIn OAuth routes
-router.get('/auth/linkedin', linkedinAuth);
-router.get('/auth/linkedin/callback', linkedinCallback);
+router.get('/linkedin', linkedinAuth);
+router.get('/linkedin/callback', linkedinCallback);
 
 // Protected routes
-router.post('/auth/logout', authenticate, logout);
-router.get('/auth/me', authenticate, getMe);
+router.post('/logout', authenticate, logout);
+router.get('/me', authenticate, getMe);
 
 export default router; 

@@ -16,6 +16,8 @@ console.log('Environment variables loaded:', {
 import app from './app';
 import mongoose from 'mongoose';
 import { emailService } from './services/email.service';
+import { createServer } from 'http';
+import { socketService } from './services/socket.service';
 
 const startServer = async () => {
   try {
@@ -32,11 +34,18 @@ const startServer = async () => {
       console.warn('The application will continue to run, but email features will not work.');
     });
 
-    // Start server
+    // Create HTTP server
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
+    const server = createServer(app);
+    
+    // Initialize WebSocket service
+    socketService.initialize(server);
+    
+    // Start server
+    server.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
       console.log(`Health check available at: http://localhost:${PORT}/api/health`);
+      console.log(`WebSocket server initialized`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

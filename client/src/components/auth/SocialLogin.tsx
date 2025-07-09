@@ -53,7 +53,7 @@ const SocialLogin: React.FC = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => handleSocialLogin(provider)}
-            className={`flex items-center justify-center px-4 py-2 rounded-md ${color} ${border} transition-colors duration-200`}
+            className={`flex items-center justify-center px-4 py-3 rounded-md ${color} ${border} transition-colors duration-200`}
           >
             {icon}
           </motion.button>

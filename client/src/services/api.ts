@@ -1,3 +1,13 @@
+/*
+ * Fichier : client/src/services/api.ts
+ * Rôle : Service centralisé pour les requêtes HTTP vers l'API backend.
+ * - Configure une instance Axios avec l'URL de base et les intercepteurs (auth, gestion des erreurs).
+ * - Fournit des méthodes pour l'authentification (login, register, logout, etc.).
+ * - Gère l'ajout automatique du token JWT dans les headers.
+ * Dépendances :
+ * - axios : pour les requêtes HTTP.
+ * - import.meta.env : pour la configuration dynamique de l'URL API.
+ */
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -73,7 +83,7 @@ export const authService = {
     return response.data;
   },
   forgotPassword: async (email: string) => {
-    const response = await api.post('/forgot-password', { email });
+    const response = await api.post('/auth/forgot-password', { email });
     return response.data;
   },
 };

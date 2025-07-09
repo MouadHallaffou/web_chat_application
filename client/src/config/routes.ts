@@ -5,6 +5,7 @@ export const ROUTES = {
   RESET_PASSWORD: '/reset-password',
   VERIFY_EMAIL: '/verify-email',
   CHAT: '/chat',
+  TEST: '/test',
 } as const;
 
 export const PUBLIC_ROUTES = [
@@ -17,4 +18,5 @@ export const PUBLIC_ROUTES = [
 
 export const PROTECTED_ROUTES = [
   ROUTES.CHAT,
+  ROUTES.TEST,
 ] as const; 

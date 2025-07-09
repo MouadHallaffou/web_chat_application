@@ -1,8 +1,21 @@
+/*
+ * Fichier : client/src/App.tsx
+ * Rôle : Composant racine de l'application React.
+ * - Définit la structure des routes (authentification, pages principales, etc.).
+ * - Fournit les contextes globaux (thème, authentification) à toute l'application.
+ * - Utilise MainLayout pour les pages nécessitant une authentification.
+ * - Gère le routage conditionnel (routes publiques/protégées).
+ * Dépendances :
+ * - react-router-dom : pour la navigation et la protection des routes.
+ * - ThemeProvider, AuthProvider : contextes globaux pour le thème et l'authentification.
+ * - MainLayout, pages et formulaires d'authentification.
+ * - ThemeToggle, Toaster : UI globale.
+ */
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
-import { AuthGuard } from './contexts/AuthContext';
+import { AuthGuard, PublicRoute } from './contexts/AuthContext';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
@@ -15,6 +28,7 @@ import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import FriendsPage from './pages/FriendsPage';
+import TestPage from './pages/TestPage';
 
 function App() {
   return (
@@ -23,9 +37,23 @@ function App() {
         <div className="min-h-screen bg-background text-foreground">
           <Routes>
             <Route path="/" element={<Navigate to="/home" replace />} />
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<RegisterForm />} />
-            <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+            
+            {/* Public auth routes */}
+            <Route path="/login" element={
+              <PublicRoute>
+                <LoginForm />
+              </PublicRoute>
+            } />
+            <Route path="/register" element={
+              <PublicRoute>
+                <RegisterForm />
+              </PublicRoute>
+            } />
+            <Route path="/forgot-password" element={
+              <PublicRoute>
+                <ForgotPasswordForm />
+              </PublicRoute>
+            } />
             <Route path="/reset-password" element={<ResetPasswordForm />} />
             
             {/* Protected routes with MainLayout */}
@@ -36,6 +64,7 @@ function App() {
             }>
               <Route path="/home" element={<HomePage />} />
               <Route path="/chat" element={<ChatPage />} />
+              <Route path="/test" element={<TestPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/friends" element={<FriendsPage />} />

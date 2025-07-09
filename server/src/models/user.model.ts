@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { Secret } from 'jsonwebtoken';
 
 export interface IUser extends Document {
   username: string;
@@ -107,11 +107,11 @@ userSchema.methods.comparePassword = async function (
 
 // Generate JWT token
 userSchema.methods.generateAuthToken = function(): string {
-  const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+  const JWT_SECRET: Secret = process.env.JWT_SECRET || 'your-secret-key';
   const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
   
   return jwt.sign(
-    { userId: this._id },
+    { userId: this._id.toString() },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );

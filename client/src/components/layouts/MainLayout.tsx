@@ -1,3 +1,15 @@
+/*
+ * Fichier : client/src/components/layouts/MainLayout.tsx
+ * Rôle : Layout principal pour les pages authentifiées de l'application.
+ * - Affiche la sidebar de navigation et le header utilisateur.
+ * - Gère le menu déroulant du profil (modification, déconnexion).
+ * - Utilise <Outlet /> pour afficher la page courante.
+ * Dépendances :
+ * - Sidebar : composant de navigation latérale.
+ * - useAuth : contexte d'authentification pour l'utilisateur courant.
+ * - react-router-dom : pour la navigation.
+ * - sweetalert2 : pour la confirmation de déconnexion.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/layout/Sidebar';

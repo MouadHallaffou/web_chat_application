@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Search } from 'lucide-react';
+import { useChatStore } from '@/features/chat/store';
 
 interface Friend {
   id: string;
@@ -17,6 +18,15 @@ interface FriendsListProps {
 }
 
 const FriendsList = ({ friends, onSelectFriend, selectedFriend }: FriendsListProps) => {
+  const { loadFriends, friends: storeFriends, isLoading } = useChatStore();
+
+  useEffect(() => {
+    loadFriends();
+  }, [loadFriends]);
+
+  // Utiliser les amis du store si disponibles, sinon utiliser les props
+  const displayFriends = storeFriends.length > 0 ? storeFriends : friends;
+
   return (
     <div className="w-80 bg-background border-r border-border flex flex-col min-h-0 h-full dark:bg-slate-800 dark:border-slate-700">
       {/* Header */}
@@ -36,7 +46,16 @@ const FriendsList = ({ friends, onSelectFriend, selectedFriend }: FriendsListPro
 
       {/* Friends List */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {friends.map((friend) => (
+        {isLoading ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="text-muted-foreground">Chargement des amis...</div>
+          </div>
+        ) : displayFriends.length === 0 ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="text-muted-foreground">Aucun ami trouvé</div>
+          </div>
+        ) : (
+          displayFriends.map((friend) => (
           <div
             key={friend.id}
             onClick={() => onSelectFriend(friend)}
@@ -52,14 +71,14 @@ const FriendsList = ({ friends, onSelectFriend, selectedFriend }: FriendsListPro
                 </div>
                 {/* Online indicator */}
                 <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-background dark:border-slate-800 ${
-                  friend.isOnline ? 'bg-green-400' : 'bg-muted'
+                  (friend.status === 'online' || friend.isOnline) ? 'bg-green-400' : 'bg-muted'
                 }`}></div>
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-foreground truncate">{friend.name}</h3>
+                  <h3 className="font-medium text-foreground truncate">{friend.username || friend.name}</h3>
                   {friend.unreadCount && (
                     <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
                       {friend.unreadCount}
@@ -72,7 +91,8 @@ const FriendsList = ({ friends, onSelectFriend, selectedFriend }: FriendsListPro
               </div>
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
     </div>
   );

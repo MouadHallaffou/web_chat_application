@@ -1,3 +1,13 @@
+/*
+ * Fichier : client/src/contexts/ThemeContext.tsx
+ * Rôle : Fournit le contexte de thème (clair/sombre) à toute l'application React.
+ * - Permet de basculer dynamiquement entre les thèmes light et dark.
+ * - Persiste le choix du thème dans le localStorage.
+ * - Applique la classe CSS correspondante au root HTML.
+ * Dépendances :
+ * - React Context API : pour le partage du thème.
+ * - localStorage : pour la persistance.
+ */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';

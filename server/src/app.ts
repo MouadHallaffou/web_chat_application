@@ -3,6 +3,8 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import authRoutes from './routes/auth.routes';
 import profileRoutes from './routes/profile.routes';
+import messageRoutes from './routes/message.routes';
+import friendshipRoutes from './routes/friendship.routes';
 import { errorHandler } from './middlewares/error-handler';
 import path from 'path';
 
@@ -24,8 +26,10 @@ app.use(cors({
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
-app.use('/api', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api', messageRoutes);
+app.use('/api', friendshipRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

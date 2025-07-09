@@ -1,3 +1,13 @@
+/*
+ * Fichier : client/src/services/socket.service.ts
+ * Rôle : Service pour la gestion de la connexion WebSocket côté client.
+ * - Initialise et gère la connexion Socket.IO avec le backend.
+ * - Fournit des méthodes pour émettre et écouter les événements de chat (messages, statuts, etc.).
+ * - Gère la reconnexion, le heartbeat, et les erreurs de connexion.
+ * Dépendances :
+ * - socket.io-client : pour la communication WebSocket.
+ * - sonner : pour les notifications d'état de connexion.
+ */
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 
@@ -134,6 +144,40 @@ class SocketService {
 
   public off(event: string, callback?: (data: any) => void): void {
     this.socket?.off(event, callback);
+  }
+
+  // Méthodes spécifiques pour les événements de chat
+  public onNewMessage(callback: (message: any) => void): void {
+    this.on('new_message', callback);
+  }
+
+  public onMessageStatusUpdate(callback: (data: { messageId: string; status: string }) => void): void {
+    this.on('message_status_update', callback);
+  }
+
+  public onMessageDeleted(callback: (data: { messageId: string }) => void): void {
+    this.on('message_deleted', callback);
+  }
+
+  public onUserStatus(callback: (data: { userId: string; status: string }) => void): void {
+    this.on('user_status', callback);
+  }
+
+  // Émettre des événements de chat
+  public emitMessage(payload: any): void {
+    this.emit('send_message', payload);
+  }
+
+  public emitMessageStatus(messageId: string, status: string): void {
+    this.emit('update_message_status', { messageId, status });
+  }
+
+  public emitJoinConversation(conversationId: string): void {
+    this.emit('join_conversation', { conversationId });
+  }
+
+  public emitLeaveConversation(conversationId: string): void {
+    this.emit('leave_conversation', { conversationId });
   }
 
   public isSocketConnected(): boolean {

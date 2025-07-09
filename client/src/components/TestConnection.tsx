@@ -1,42 +1,130 @@
-import { useState, useEffect } from 'react';
-import api from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { socketService } from '@/services/socket.service';
+import { messageService } from '@/services/message.service';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const TestConnection = () => {
-  const [status, setStatus] = useState<string>('Checking connection...');
-  const [error, setError] = useState<string | null>(null);
+const TestConnection: React.FC = () => {
+  const [socketStatus, setSocketStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
+  const [apiStatus, setApiStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
+  const [testMessage, setTestMessage] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        console.log('Attempting to connect to:', import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
-        const response = await api.get('/health');
-        setStatus('Connected to server: ' + response.data.message);
-      } catch (err: any) {
-        const errorMessage = err.response 
-          ? `Error ${err.response.status}: ${err.response.data?.message || err.message}`
-          : err.message;
-        setError(`Failed to connect to server: ${errorMessage}`);
-        console.error('Connection error details:', {
-          message: err.message,
-          response: err.response?.data,
-          status: err.response?.status,
-          config: err.config
-        });
-      }
-    };
+    // Tester la connexion API
+    testApiConnection();
+    
+    // Tester la connexion WebSocket si l'utilisateur est connecté
+    if (user) {
+      testSocketConnection();
+    }
+  }, [user]);
 
-    checkConnection();
-  }, []);
+  const testApiConnection = async () => {
+    try {
+      const response = await fetch('/api/health');
+      if (response.ok) {
+        setApiStatus('connected');
+      } else {
+        setApiStatus('error');
+      }
+    } catch (error) {
+      setApiStatus('error');
+    }
+  };
+
+  const testSocketConnection = async () => {
+    if (!user) return;
+
+    try {
+      setSocketStatus('connecting');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setSocketStatus('disconnected');
+        return;
+      }
+
+      await socketService.connect({
+        url: 'http://localhost:5000',
+        token
+      });
+      setSocketStatus('connected');
+    } catch (error) {
+      setSocketStatus('disconnected');
+      console.error('Socket connection failed:', error);
+    }
+  };
+
+  const sendTestMessage = async () => {
+    if (!user || !testMessage.trim()) return;
+
+    try {
+      await messageService.sendMessage({
+        content: testMessage,
+        receiverId: user._id, // Envoyer à soi-même pour le test
+        type: 'text'
+      });
+      setTestMessage('');
+    } catch (error) {
+      console.error('Failed to send test message:', error);
+    }
+  };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Server Connection Test</h2>
-      <div className={`p-4 rounded ${error ? 'bg-red-100' : 'bg-green-100'}`}>
-        <p className={error ? 'text-red-700' : 'text-green-700'}>
-          {error || status}
-        </p>
-      </div>
-    </div>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Test de Connexion</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <span>API Status:</span>
+          <span className={`px-2 py-1 rounded text-sm ${
+            apiStatus === 'connected' ? 'bg-green-100 text-green-800' :
+            apiStatus === 'error' ? 'bg-red-100 text-red-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {apiStatus}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span>WebSocket Status:</span>
+          <span className={`px-2 py-1 rounded text-sm ${
+            socketStatus === 'connected' ? 'bg-green-100 text-green-800' :
+            socketStatus === 'connecting' ? 'bg-yellow-100 text-yellow-800' :
+            'bg-red-100 text-red-800'
+          }`}>
+            {socketStatus}
+          </span>
+        </div>
+
+        {user && (
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={testMessage}
+              onChange={(e) => setTestMessage(e.target.value)}
+              placeholder="Message de test..."
+              className="w-full px-3 py-2 border rounded"
+            />
+            <Button 
+              onClick={sendTestMessage}
+              disabled={!testMessage.trim() || socketStatus !== 'connected'}
+              className="w-full"
+            >
+              Envoyer Message de Test
+            </Button>
+          </div>
+        )}
+
+        {!user && (
+          <div className="text-center text-gray-500">
+            Connectez-vous pour tester les WebSockets
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

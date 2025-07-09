@@ -240,7 +240,11 @@ export const forgotPassword = async (
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
-      throw new AppError(404, 'User not found');
+      // Ne pas révéler si l'email existe ou non pour des raisons de sécurité
+      return res.status(200).json({
+        status: 'success',
+        message: 'If an account with that email exists, a password reset link has been sent.',
+      });
     }
 
     // Generate reset token
@@ -255,7 +259,7 @@ export const forgotPassword = async (
 
     res.status(200).json({
       status: 'success',
-      message: 'Password reset email sent',
+      message: 'If an account with that email exists, a password reset link has been sent.',
     });
   } catch (error) {
     next(error);
