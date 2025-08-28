@@ -5,6 +5,13 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
+// Interface pour les données de suppression de compte
+interface DeleteAccountData {
+  reason: string;
+  feedback?: string;
+  password: string;
+}
+
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -166,5 +173,95 @@ export const updateProfile = async (
     }
     
     next(new AppError(500, 'Erreur interne du serveur lors de la mise à jour du profil'));
+  }
+};
+
+export const deleteAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { reason, feedback, password }: DeleteAccountData = req.body;
+    const userId = (req.user as any)?._id;
+
+    if (!userId) {
+      return next(new AppError(401, 'Non authentifié'));
+    }
+
+    if (!reason) {
+      return next(new AppError(400, 'La cause de suppression est obligatoire'));
+    }
+
+    if (!password) {
+      return next(new AppError(400, 'Le mot de passe est requis pour confirmer la suppression'));
+    }
+
+    // Vérifier le mot de passe
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      return next(new AppError(404, 'Utilisateur non trouvé'));
+    }
+
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return next(new AppError(400, 'Mot de passe incorrect'));
+    }
+
+    // Supprimer l'avatar s'il existe
+    if (user.avatar) {
+      const avatarPath = path.join(process.cwd(), user.avatar);
+      if (fs.existsSync(avatarPath)) {
+        try {
+          fs.unlinkSync(avatarPath);
+        } catch (error) {
+          console.error('Erreur lors de la suppression de l\'avatar:', error);
+        }
+      }
+      
+      // Supprimer le dossier de l'utilisateur
+      const userDir = path.join(process.cwd(), 'uploads', 'avatars', userId.toString());
+      if (fs.existsSync(userDir)) {
+        try {
+          fs.rmSync(userDir, { recursive: true, force: true });
+        } catch (error) {
+          console.error('Erreur lors de la suppression du dossier utilisateur:', error);
+        }
+      }
+    }
+
+    // Log de la suppression (pour analytics)
+    console.log('Account deletion:', {
+      userId: userId.toString(),
+      email: user.email,
+      username: user.username,
+      reason,
+      feedback: feedback || 'Aucun commentaire',
+      timestamp: new Date().toISOString()
+    });
+
+    // TODO: Ici, vous pouvez ajouter la logique pour supprimer les données associées
+    // - Messages dans les conversations
+    // - Conversations où l'utilisateur était membre
+    // - Invitations d'amis envoyées/reçues
+    // - Notifications
+    // Exemple :
+    // await Message.deleteMany({ sender: userId });
+    // await Conversation.updateMany(
+    //   { participants: userId },
+    //   { $pull: { participants: userId } }
+    // );
+
+    // Supprimer le compte utilisateur
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Votre compte a été supprimé avec succès'
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la suppression du compte:', error);
+    next(new AppError(500, 'Erreur interne lors de la suppression du compte'));
   }
 }; 
