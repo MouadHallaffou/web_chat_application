@@ -42,18 +42,36 @@ const EditProfileForm: React.FC = () => {
 
   const validate = () => {
     const errors: { [key: string]: string } = {};
+
     if (username && username.length < 3) {
       errors.username = "Le nom d'utilisateur doit contenir au moins 3 caractères.";
     }
+
     if (email && !validateEmail(email)) {
       errors.email = "Adresse email invalide.";
     }
-    if (password && password.length < 6) {
-      errors.password = "Le mot de passe doit contenir au moins 6 caractères.";
+
+    // Validation du mot de passe seulement s'il est renseigné
+    if (password) {
+      if (password.length < 8) {
+        errors.password = "Le mot de passe doit contenir au moins 8 caractères.";
+      }
+
+      if (password !== confirmPassword) {
+        errors.confirmPassword = "Les mots de passe ne correspondent pas.";
+      }
     }
-    if (password && password !== confirmPassword) {
-      errors.confirmPassword = "Les mots de passe ne correspondent pas.";
+
+    // Si un mot de passe est renseigné, la confirmation est obligatoire
+    if (password && !confirmPassword) {
+      errors.confirmPassword = "Veuillez confirmer votre mot de passe.";
     }
+
+    // Si seulement la confirmation est renseignée sans le mot de passe
+    if (!password && confirmPassword) {
+      errors.password = "Veuillez saisir le nouveau mot de passe.";
+    }
+
     return errors;
   };
 
@@ -74,21 +92,44 @@ const EditProfileForm: React.FC = () => {
       if (email && email !== user?.email) formData.append('email', email);
       if (avatar) formData.append('avatar', avatar);
       if (removeAvatar) formData.append('removeAvatar', 'true');
-      if (password) formData.append('password', password);
+      // Envoyer le mot de passe seulement s'il est valide (8+ caractères et correspondant)
+      if (password && password.length >= 8 && password === confirmPassword) {
+        formData.append('password', password);
+      }
+
       const response = await api.put('/profile/edit', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+
+      // Handle token update if provided
       if (response.data?.data?.token) {
         localStorage.setItem('token', response.data.data.token);
-        await login(email || user?.email || '', password || undefined);
+        // Only try to login if we have both email and password
+        if ((email || user?.email) && password) {
+          await login(email || user?.email || '', password);
+        }
       }
+
       setSuccess('Profil mis à jour avec succès !');
       showSuccess('Profil mis à jour avec succès !');
       setTimeout(() => {
         window.location.href = '../home';
       }, 1200);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur lors de la mise à jour du profil';
+      console.error('Profile update error:', err);
+      let errorMessage = 'Erreur lors de la mise à jour du profil';
+
+      if (err && typeof err === 'object' && 'response' in err) {
+        const apiError = err as { response?: { data?: { message?: string }; status?: number } };
+        if (apiError.response?.data?.message) {
+          errorMessage = apiError.response.data.message;
+        } else if (apiError.response?.status === 500) {
+          errorMessage = 'Erreur interne du serveur. Veuillez réessayer.';
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
       setError(errorMessage);
       showError(errorMessage);
     } finally {
@@ -193,7 +234,7 @@ const EditProfileForm: React.FC = () => {
             className="w-full px-3 py-2 border rounded-lg bg-background text-foreground pr-10"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            placeholder="Laisser vide pour ne pas changer"
+            placeholder="Minimum 8 caractères"
           />
           <button
             type="button"
@@ -204,6 +245,9 @@ const EditProfileForm: React.FC = () => {
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
           {fieldErrors.password && <p className="text-red-500 text-sm mt-1">{fieldErrors.password}</p>}
+          {password && password.length < 8 && (
+            <p className="text-orange-500 text-xs mt-1">Le mot de passe doit contenir au moins 8 caractères</p>
+          )}
         </div>
         <div className="relative">
           <label className="block text-sm font-medium mb-1 text-muted-foreground">Confirmer le mot de passe</label>
@@ -212,7 +256,7 @@ const EditProfileForm: React.FC = () => {
             className="w-full px-3 py-2 border rounded-lg bg-background text-foreground pr-10"
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
-            placeholder="Laisser vide pour ne pas changer"
+            placeholder="Répéter le nouveau mot de passe"
           />
           <button
             type="button"
@@ -223,6 +267,9 @@ const EditProfileForm: React.FC = () => {
             {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
           {fieldErrors.confirmPassword && <p className="text-red-500 text-sm mt-1">{fieldErrors.confirmPassword}</p>}
+          {password && confirmPassword && password !== confirmPassword && (
+            <p className="text-orange-500 text-xs mt-1">Les mots de passe ne correspondent pas</p>
+          )}
         </div>
       </div>
       <div className="flex gap-4 max-w-sm mx-start">

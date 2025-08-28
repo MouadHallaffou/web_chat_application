@@ -70,7 +70,13 @@ export const updateProfile = async (
       const updateData: any = {};
       if (username) updateData.username = username;
       if (email) updateData.email = email;
-      if (password && password.length >= 6) {
+      
+      // Validation et hashage du mot de passe
+      if (password) {
+        if (password.length < 8) {
+          return next(new AppError(400, 'Le mot de passe doit contenir au moins 8 caractères'));
+        }
+        
         // Hash password before saving
         const bcrypt = require('bcryptjs');
         const salt = await bcrypt.genSalt(10);
@@ -127,7 +133,12 @@ export const updateProfile = async (
       // Générer un nouveau token si email ou mot de passe changé
       let token = null;
       if (email || password) {
-        token = updatedUser.generateAuthToken();
+        try {
+          token = updatedUser.generateAuthToken();
+        } catch (tokenError) {
+          console.error('Error generating auth token:', tokenError);
+          // Continue without token - user will need to login again
+        }
       }
 
       res.status(200).json({
@@ -140,6 +151,20 @@ export const updateProfile = async (
       });
     });
   } catch (error) {
-    next(error);
+    console.error('Profile update error:', error);
+    
+    // More specific error handling
+    if (error instanceof Error) {
+      if (error.message.includes('duplicate key')) {
+        if (error.message.includes('username')) {
+          return next(new AppError(400, 'Ce nom d\'utilisateur est déjà utilisé'));
+        } else if (error.message.includes('email')) {
+          return next(new AppError(400, 'Cette adresse email est déjà utilisée'));
+        }
+      }
+      return next(new AppError(500, `Erreur de mise à jour du profil: ${error.message}`));
+    }
+    
+    next(new AppError(500, 'Erreur interne du serveur lors de la mise à jour du profil'));
   }
 }; 
