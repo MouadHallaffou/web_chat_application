@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '@/services/api';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Trash2, RotateCcw } from 'lucide-react';
 import { showSuccess, showError } from '@/components/ui/toast';
 
 type User = {
@@ -126,45 +126,64 @@ const EditProfileForm: React.FC = () => {
         {fieldErrors.email && <p className="text-red-500 text-sm mt-1">{fieldErrors.email}</p>}
       </div>
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1 text-muted-foreground">Avatar</label>
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarChange}
-              className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+        <label className="block text-sm font-medium mb-2 text-muted-foreground">Avatar</label>
+
+        {/* File input */}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleAvatarChange}
+          className="w-full mb-3 text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 transition-all"
+        />
+
+        {/* Current avatar display */}
+        {user?.avatar && !removeAvatar && (
+          <div className="flex items-center gap-3 p-3 border rounded-lg bg-background">
+            <img
+              src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}${user.avatar}`}
+              alt="Avatar actuel"
+              className="w-12 h-12 rounded-full object-cover"
             />
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">Photo actuelle</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRemoveAvatar}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Supprimer
+            </button>
           </div>
-          {user?.avatar && !removeAvatar && (
-            <div className="flex items-center gap-2">
-              <img
-                src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}${user.avatar}`}
-                alt="Avatar actuel"
-                className="w-12 h-12 rounded-full object-cover border"
-              />
-              <button
-                type="button"
-                onClick={handleRemoveAvatar}
-                className="px-3 py-1 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-              >
-                Supprimer
-              </button>
+        )}
+
+        {/* Removed avatar state */}
+        {removeAvatar && (
+          <div className="flex items-center gap-3 p-3 border border-red-200 rounded-lg bg-red-50">
+            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400 text-xs">Aucune</span>
             </div>
-          )}
-          {removeAvatar && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-red-500">Photo supprimée</span>
-              <button
-                type="button"
-                onClick={() => setRemoveAvatar(false)}
-                className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-              >
-                Annuler
-              </button>
+            <div className="flex-1">
+              <p className="text-sm text-red-600">Photo supprimée</p>
             </div>
-          )}
-        </div>
+            <button
+              type="button"
+              onClick={() => setRemoveAvatar(false)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Annuler
+            </button>
+          </div>
+        )}
+
+        {/* New file selected indicator */}
+        {avatar && (
+          <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-700">Nouvelle photo sélectionnée: {avatar.name}</p>
+          </div>
+        )}
       </div>
       <div className="mb-4 flex gap-4 flex-col w-full">
         <div className="relative">
