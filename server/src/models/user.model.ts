@@ -24,10 +24,9 @@ const userSchema = new Schema<IUser>(
     username: {
       type: String,
       required: [true, 'Username is required'],
-      unique: true,
       trim: true,
       minlength: [3, 'Username must be at least 3 characters long'],
-      maxlength: [20, 'Username cannot exceed 20 characters'],
+      maxlength: [30, 'Username cannot exceed 30 characters'],
     },
     email: {
       type: String,
@@ -77,7 +76,6 @@ const userSchema = new Schema<IUser>(
 
 // Indexes
 userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
 userSchema.index({ status: 1 });
 userSchema.index({ lastSeen: 1 });
 

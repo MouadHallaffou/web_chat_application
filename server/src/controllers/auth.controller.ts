@@ -29,18 +29,36 @@ passport.use(new GoogleStrategy({
   callbackURL: process.env.GOOGLE_CALLBACK_URL!
 }, async (accessToken, refreshToken, profile, done) => {
   try {
-    let user = await User.findOne({ email: profile.emails?.[0].value });
+    const email = profile.emails?.[0]?.value;
+    if (!email) {
+      return done(new Error('No email found in Google profile'), false);
+    }
+
+    let user = await User.findOne({ email });
+    
     if (!user) {
+      // Générer un nom d'utilisateur unique si nécessaire
+      let username = profile.displayName || email.split('@')[0];
+      
+      // Vérifier si le nom d'utilisateur existe déjà
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) {
+        // Ajouter un suffixe numérique pour rendre unique
+        const timestamp = Date.now().toString().slice(-4);
+        username = `${username}_${timestamp}`;
+      }
+
       user = await User.create({
-        email: profile.emails?.[0].value,
-        username: profile.displayName,
+        email,
+        username,
         isVerified: true,
-        password: Math.random().toString(36).slice(-8), // mot de passe aléatoire
+        password: crypto.randomBytes(16).toString('hex'), // mot de passe aléatoire plus sécurisé
         status: 'online'
       });
     }
     return done(null, user);
   } catch (error) {
+    console.error('Google OAuth error:', error);
     return done(error as Error);
   }
 }));
@@ -50,7 +68,7 @@ passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID!,
   clientSecret: process.env.GITHUB_CLIENT_SECRET!,
   callbackURL: '/api/auth/github/callback'
-}, async (accessToken, refreshToken, profile, done) => {
+}, async (accessToken: any, refreshToken: any, profile: any, done: any) => {
   try {
     console.log('GitHub profile:', profile);
     let email = profile.emails?.[0]?.value;
@@ -68,17 +86,28 @@ passport.use(new GitHubStrategy({
 
     if (!email) {
       console.error('No email found in GitHub profile or API');
-      return done(new Error('No email found in GitHub profile'), null);
+      return done(new Error('No email found in GitHub profile'), false);
     }
 
     let user = await User.findOne({ email });
+    
     if (!user) {
+      // Générer un nom d'utilisateur unique
+      let username = profile.username || email.split('@')[0];
+      
+      // Vérifier si le nom d'utilisateur existe déjà
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) {
+        // Ajouter un suffixe numérique pour rendre unique
+        const timestamp = Date.now().toString().slice(-4);
+        username = `${username}_${timestamp}`;
+      }
+
       user = await User.create({
         email,
-        username: profile.username || email.split('@')[0],
-        // avatar: profile._json?.avatar_url || '',
+        username,
         isVerified: true,
-        password: Math.random().toString(36).slice(-8),
+        password: crypto.randomBytes(16).toString('hex'),
         status: 'online'
       });
     }
@@ -95,22 +124,39 @@ passport.use(new LinkedInStrategy({
   clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
   callbackURL: '/api/auth/linkedin/callback',
   scope: ['r_emailaddress', 'r_liteprofile']
-}, async (accessToken, refreshToken, profile, done) => {
+}, async (accessToken: any, refreshToken: any, profile: any, done: any) => {
   try {
-    let user = await User.findOne({ email: profile.emails?.[0].value });
+    const email = profile.emails?.[0]?.value;
+    if (!email) {
+      return done(new Error('No email found in LinkedIn profile'), false);
+    }
+
+    let user = await User.findOne({ email });
     
     if (!user) {
+      // Générer un nom d'utilisateur unique
+      let username = profile.displayName || email.split('@')[0];
+      
+      // Vérifier si le nom d'utilisateur existe déjà
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) {
+        // Ajouter un suffixe numérique pour rendre unique
+        const timestamp = Date.now().toString().slice(-4);
+        username = `${username}_${timestamp}`;
+      }
+
       user = await User.create({
-        email: profile.emails?.[0].value,
-        username: profile.displayName,
-        isVerified: true, // Auto-verify social logins
-        password: Math.random().toString(36).slice(-8), // Random password for social users
+        email,
+        username,
+        isVerified: true,
+        password: crypto.randomBytes(16).toString('hex'),
         status: 'online'
       });
     }
     
     return done(null, user);
   } catch (error) {
+    console.error('LinkedIn OAuth error:', error);
     return done(error as Error);
   }
 }));
@@ -123,17 +169,26 @@ export const register = async (
   try {
     const { email, password, username } = req.body;
 
-    // Check if user already exists
+    // Check if user already exists by email
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       throw new AppError(400, 'Email already registered');
+    }
+
+    // Ensure username is unique for registration
+    let finalUsername = username;
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername) {
+      // Add a random suffix to make it unique
+      const timestamp = Date.now().toString().slice(-4);
+      finalUsername = `${username}_${timestamp}`;
     }
 
     // Create user with auto-verification
     const user = new User({
       email,
       password,
-      username,
+      username: finalUsername,
       isVerified: true, // Auto-verify all users
       status: 'online'
     });
@@ -156,7 +211,14 @@ export const register = async (
         }
       }
     });
-  } catch (error) {
+  } catch (error: any) {
+    // Handle MongoDB duplicate key errors
+    if (error.code === 11000) {
+      if (error.message.includes('email')) {
+        return next(new AppError(400, 'Cette adresse email est déjà utilisée'));
+      }
+      return next(new AppError(400, 'Données en doublon détectées'));
+    }
     next(error);
   }
 };
