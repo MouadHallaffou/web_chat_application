@@ -18,6 +18,7 @@ const EditProfileForm: React.FC = () => {
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
   const [avatar, setAvatar] = useState<File | null>(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +31,13 @@ const EditProfileForm: React.FC = () => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setAvatar(e.target.files[0]);
+      setRemoveAvatar(false); // Reset remove flag when new file is selected
     }
+  };
+
+  const handleRemoveAvatar = () => {
+    setRemoveAvatar(true);
+    setAvatar(null); // Clear any selected file
   };
 
   const validate = () => {
@@ -66,6 +73,7 @@ const EditProfileForm: React.FC = () => {
       if (username && username !== user?.username) formData.append('username', username);
       if (email && email !== user?.email) formData.append('email', email);
       if (avatar) formData.append('avatar', avatar);
+      if (removeAvatar) formData.append('removeAvatar', 'true');
       if (password) formData.append('password', password);
       const response = await api.put('/profile/edit', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -117,18 +125,46 @@ const EditProfileForm: React.FC = () => {
         />
         {fieldErrors.email && <p className="text-red-500 text-sm mt-1">{fieldErrors.email}</p>}
       </div>
-      <div className="mb-4 flex items-center gap-0">
-        <div className="flex-2">
-          <label className="block text-sm font-medium mb-1 text-muted-foreground">Avatar</label>
-          <input type="file" accept="image/*" onChange={handleAvatarChange} />
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1 text-muted-foreground">Avatar</label>
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+            />
+          </div>
+          {user?.avatar && !removeAvatar && (
+            <div className="flex items-center gap-2">
+              <img
+                src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}${user.avatar}`}
+                alt="Avatar actuel"
+                className="w-12 h-12 rounded-full object-cover border"
+              />
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                className="px-3 py-1 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Supprimer
+              </button>
+            </div>
+          )}
+          {removeAvatar && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-red-500">Photo supprimée</span>
+              <button
+                type="button"
+                onClick={() => setRemoveAvatar(false)}
+                className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          )}
         </div>
-        {user?.avatar && (
-          <img
-            src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}${user.avatar}`}
-            alt="Ancien avatar"
-            className="w-12 h-12 rounded-full object-cover border"
-          />
-        )}
       </div>
       <div className="mb-4 flex gap-4 flex-col w-full">
         <div className="relative">

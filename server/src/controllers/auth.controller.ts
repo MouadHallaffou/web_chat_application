@@ -76,6 +76,7 @@ passport.use(new GitHubStrategy({
       user = await User.create({
         email,
         username: profile.username || email.split('@')[0],
+        // avatar: profile._json?.avatar_url || '',
         isVerified: true,
         password: Math.random().toString(36).slice(-8),
         status: 'online'

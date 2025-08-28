@@ -47,7 +47,7 @@ export const updateProfile = async (
         return next(new AppError(400, err.message));
       }
 
-      const { username, email, password } = req.body;
+      const { username, email, password, removeAvatar } = req.body;
       const userId = req.user._id;
 
       // Check if username is already taken
@@ -76,13 +76,33 @@ export const updateProfile = async (
         const salt = await bcrypt.genSalt(10);
         updateData.password = await bcrypt.hash(password, salt);
       }
-      if (req.file) {
-        // Delete old avatar if exists
-        const user = await User.findById(userId);
+
+      // Handle avatar update or removal
+      const user = await User.findById(userId);
+      
+      if (removeAvatar === 'true') {
+        // Remove avatar - delete old file and set avatar to null
         if (user?.avatar) {
           const oldAvatarPath = path.join(process.cwd(), user.avatar);
           if (fs.existsSync(oldAvatarPath)) {
-            fs.unlinkSync(oldAvatarPath);
+            try {
+              fs.unlinkSync(oldAvatarPath);
+            } catch (error) {
+              console.error('Error deleting old avatar file:', error);
+            }
+          }
+        }
+        updateData.avatar = null;
+      } else if (req.file) {
+        // Upload new avatar - delete old one if exists
+        if (user?.avatar) {
+          const oldAvatarPath = path.join(process.cwd(), user.avatar);
+          if (fs.existsSync(oldAvatarPath)) {
+            try {
+              fs.unlinkSync(oldAvatarPath);
+            } catch (error) {
+              console.error('Error deleting old avatar file:', error);
+            }
           }
         }
         // Store relative path for client access
