@@ -13,7 +13,7 @@ import { create } from 'zustand';
 import { ChatState, Conversation, Message, SendMessagePayload } from './types';
 import { messageService } from '@/services/message.service';
 import { socketService } from '@/services/socket.service';
-import { friendshipService, Friend, Conversation as FriendshipConversation } from '@/services/friendship.service';
+import { friendshipService, Friend, Conversation as FriendshipConversation, FriendInvitation } from '@/services/friendship.service';
 
 interface ChatStore extends ChatState {
   setCurrentConversation: (conversation: Conversation) => void;
@@ -26,6 +26,8 @@ interface ChatStore extends ChatState {
   loadFriends: () => Promise<void>;
   friends: Friend[];
   friendshipConversations: FriendshipConversation[];
+  friendInvitations: FriendInvitation[];
+  loadFriendInvitations: () => Promise<void>;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -36,6 +38,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   error: null,
   friends: [],
   friendshipConversations: [],
+  friendInvitations: [],
 
   // Initialiser les listeners WebSocket
   initializeSocketListeners: () => {
@@ -151,6 +154,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         isLoading: false 
       });
       
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+    }
+  },
+
+  loadFriendInvitations: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await friendshipService.getFriendInvitations();
+      set({ friendInvitations: response.data, isLoading: false });
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
     }

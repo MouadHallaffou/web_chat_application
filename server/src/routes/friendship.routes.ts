@@ -4,6 +4,7 @@ import { Friendship } from '../models/friendship.model';
 import { User } from '../models/user.model';
 import { Conversation } from '../models/conversation.model';
 import mongoose from 'mongoose';
+import { FriendInvitation } from '../models/friend-invitation.model';
 
 const router = express.Router();
 
@@ -104,7 +105,7 @@ router.get('/conversations', async (req, res) => {
 router.post('/friends/request', async (req, res) => {
   try {
     const { recipientId } = req.body;
-    const requesterId = req.user._id;
+    const requesterId = (req.user as any)._id;
 
     if (!mongoose.Types.ObjectId.isValid(recipientId)) {
       return res.status(400).json({
@@ -113,39 +114,51 @@ router.post('/friends/request', async (req, res) => {
       });
     }
 
-    // Vérifier si l'amitié existe déjà
-    const existingFriendship = await Friendship.findOne({
+    // Vérifier si une invitation existe déjà
+    const existingInvitation = await FriendInvitation.findOne({
       $or: [
-        { requesterId, recipientId },
-        { requesterId: recipientId, recipientId }
+        { senderId: requesterId, receiverId: recipientId, status: 'pending' },
+        { senderId: recipientId, receiverId: requesterId, status: 'pending' }
       ]
     });
-
-    if (existingFriendship) {
+    if (existingInvitation) {
       return res.status(400).json({
         status: 'error',
-        message: 'Friendship request already exists'
+        message: 'Friend invitation already exists'
       });
     }
 
-    // Créer la demande d'amitié
-    const friendship = new Friendship({
-      requesterId,
-      recipientId,
+    // Vérifier si l'amitié existe déjà
+    const existingFriendship = await Friendship.findOne({
+      $or: [
+        { user1Id: requesterId, user2Id: recipientId, status: 'active' },
+        { user1Id: recipientId, user2Id: requesterId, status: 'active' }
+      ]
+    });
+    if (existingFriendship) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'You are already friends'
+      });
+    }
+
+    // Créer l'invitation d'ami
+    const invitation = new FriendInvitation({
+      senderId: requesterId,
+      receiverId: recipientId,
       status: 'pending'
     });
-
-    await friendship.save();
+    await invitation.save();
 
     res.status(201).json({
       status: 'success',
-      data: friendship
+      data: invitation
     });
   } catch (error) {
-    console.error('Error creating friendship request:', error);
+    console.error('Error creating friend invitation:', error);
     res.status(500).json({
       status: 'error',
-      message: 'Failed to create friendship request'
+      message: 'Failed to create friend invitation'
     });
   }
 });
@@ -186,6 +199,88 @@ router.put('/friends/:friendshipId/respond', async (req, res) => {
       status: 'error',
       message: 'Failed to respond to friendship request'
     });
+  }
+});
+
+// Récupérer les invitations d'amis reçues (pending)
+router.get('/friend-invitations', async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const invitations = await FriendInvitation.find({ receiverId: userId, status: 'pending' })
+      .populate('senderId', 'username email avatar status lastSeen');
+    res.json({ status: 'success', data: invitations });
+  } catch (error) {
+    console.error('Error fetching friend invitations:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch friend invitations' });
+  }
+});
+
+// Accepter/Refuser une invitation d'ami
+router.put('/friend-invitations/:invitationId/respond', async (req, res) => {
+  try {
+    const { invitationId } = req.params;
+    const { status } = req.body; // 'accepted' ou 'rejected'
+    const userId = (req.user as any)._id;
+    if (!['accepted', 'rejected'].includes(status)) {
+      return res.status(400).json({ status: 'error', message: 'Invalid status' });
+    }
+    const invitation = await FriendInvitation.findById(invitationId);
+    if (!invitation) {
+      return res.status(404).json({ status: 'error', message: 'Invitation not found' });
+    }
+    if (!invitation.receiverId.equals(userId)) {
+      return res.status(403).json({ status: 'error', message: 'Not authorized to respond to this invitation' });
+    }
+    if (invitation.status !== 'pending') {
+      return res.status(400).json({ status: 'error', message: 'Invitation already responded' });
+    }
+    if (status === 'accepted') {
+      // Créer le Friendship
+      const [user1Id, user2Id] = invitation.senderId < invitation.receiverId
+        ? [invitation.senderId, invitation.receiverId]
+        : [invitation.receiverId, invitation.senderId];
+      const existingFriendship = await Friendship.findOne({ user1Id, user2Id });
+      if (!existingFriendship) {
+        await Friendship.create({ user1Id, user2Id, status: 'active' });
+      }
+      invitation.status = 'accepted';
+      invitation.acceptedAt = new Date();
+    } else if (status === 'rejected') {
+      invitation.status = 'rejected';
+      invitation.rejectedAt = new Date();
+    }
+    await invitation.save();
+    res.json({ status: 'success', data: invitation });
+  } catch (error) {
+    console.error('Error responding to friend invitation:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to respond to friend invitation' });
+  }
+});
+
+// Rechercher des utilisateurs par username (hors utilisateur courant)
+router.get('/users/search', async (req, res) => {
+  try {
+    const { username } = req.query;
+    const userId = (req.user as any)._id;
+    if (!username || typeof username !== 'string' || username.length < 2) {
+      return res.status(400).json({ status: 'error', message: 'Username query required (min 2 chars)' });
+    }
+    // Recherche insensible à la casse, exclure l'utilisateur courant
+    const users = await User.find({
+      username: { $regex: username, $options: 'i' },
+      _id: { $ne: userId }
+    }).select('username email avatar status lastSeen');
+    res.json({ status: 'success', data: users.map(u => ({
+      id: u._id,
+      username: u.username,
+      email: u.email,
+      avatar: u.avatar,
+      status: u.status,
+      lastSeen: u.lastSeen
+    })) });
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to search users' });
   }
 });
 

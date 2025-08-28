@@ -25,6 +25,7 @@ interface ChatWindowProps {
 
 const ChatWindow = ({ selectedFriend }: ChatWindowProps) => {
   const [newMessage, setNewMessage] = useState('');
+  const [showProfile, setShowProfile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Utiliser le store Zustand pour les messages et conversations
@@ -91,10 +92,18 @@ const ChatWindow = ({ selectedFriend }: ChatWindowProps) => {
       <div className="p-4 border-b border-border bg-background shrink-0 dark:bg-slate-800 dark:border-slate-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold">{selectedFriend.avatar}</span>
-              </div>
+            <div className="relative cursor-pointer" onClick={() => setShowProfile(true)}>
+              {selectedFriend.avatar && selectedFriend.avatar.startsWith('http') ? (
+                <img
+                  src={selectedFriend.avatar}
+                  alt={selectedFriend.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold">{selectedFriend.avatar}</span>
+                </div>
+              )}
               <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background dark:border-slate-800 ${
                 selectedFriend.isOnline ? 'bg-green-500' : 'bg-muted'
               }`}></div>
@@ -194,6 +203,25 @@ const ChatWindow = ({ selectedFriend }: ChatWindowProps) => {
           </button>
         </form>
       </div>
+      {/* Modale de profil utilisateur */}
+      {showProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg p-6 min-w-[300px] shadow-lg relative">
+            <button className="absolute top-2 right-2 text-xl" onClick={() => setShowProfile(false)}>&times;</button>
+            <div className="flex flex-col items-center gap-3">
+              {selectedFriend.avatar && selectedFriend.avatar.startsWith('http') ? (
+                <img src={selectedFriend.avatar} alt={selectedFriend.name} className="w-20 h-20 rounded-full object-cover" />
+              ) : (
+                <div className="w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
+                  <span className="text-white text-3xl font-semibold">{selectedFriend.avatar}</span>
+                </div>
+              )}
+              <h2 className="text-lg font-bold mt-2">{selectedFriend.name || selectedFriend.username}</h2>
+              {selectedFriend.email && <p className="text-sm text-muted-foreground">{selectedFriend.email}</p>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

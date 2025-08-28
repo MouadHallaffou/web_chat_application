@@ -9,9 +9,9 @@
         "build": "tsc",
         "lint": "eslint . --ext .ts",
         "test": "jest",
-            "init:db": "ts-node src/scripts/init-db.ts",
-    "init-schemas": "ts-node src/scripts/init-schemas.ts",
-    "seed": "ts-node src/scripts/seed-data.ts"
+        "init:db": "ts-node src/scripts/init-db.ts",
+        "init-schemas": "ts-node src/scripts/init-schemas.ts",
+        "seed": "ts-node src/scripts/seed-data.ts"
     },
     "keywords": [
         "express",
@@ -31,6 +31,7 @@
         "jsonwebtoken": "^9.0.0",
         "mongoose": "^7.0.3",
         "multer": "^2.0.1",
+        "node-fetch": "^3.3.2",
         "nodemailer": "^6.10.1",
         "passport": "^0.7.0",
         "passport-github2": "^0.1.12",

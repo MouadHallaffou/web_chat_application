@@ -9,6 +9,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import { Strategy as LinkedInStrategy } from 'passport-linkedin-oauth2';
+import fetch from 'node-fetch';
 
 const generateToken = (userId: string): string => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'your-secret-key', {
@@ -55,7 +56,6 @@ passport.use(new GitHubStrategy({
     let email = profile.emails?.[0]?.value;
 
     if (!email) {
-      const fetch = require('node-fetch');
       const res = await fetch('https://api.github.com/user/emails', {
         headers: { 'Authorization': `token ${accessToken}` }
       });
@@ -418,4 +418,4 @@ export const getMe = (req: Request, res: Response) => {
       user: req.user
     }
   });
-}; 
+};
