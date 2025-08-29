@@ -5,37 +5,40 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.emailService = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
-const error_handler_1 = require("../middlewares/error-handler");
 class EmailService {
     constructor() {
-        this.retryCount = 3;
+        this.maxRetries = 3;
         this.retryDelay = 1000; // 1 second
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.error('Email configuration missing:', {
-                hasUser: !!process.env.EMAIL_USER,
-                hasPass: !!process.env.EMAIL_PASS
-            });
-            throw new Error('Email credentials are not configured. Please check your .env file.');
-        }
         this.transporter = nodemailer_1.default.createTransport({
-            service: 'gmail',
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
+            host: process.env.EMAIL_HOST,
+            port: Number(process.env.EMAIL_PORT),
+            secure: process.env.EMAIL_SECURE === 'true',
             auth: {
                 user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
+                pass: process.env.EMAIL_PASS,
             },
-            tls: {
-                rejectUnauthorized: false
-            }
+            pool: true,
+            maxConnections: 5,
+            maxMessages: 100,
+            rateDelta: 1000,
+            rateLimit: 5
         });
     }
-    static getInstance() {
-        if (!EmailService.instance) {
-            EmailService.instance = new EmailService();
+    async retryOperation(operation) {
+        let lastError = null;
+        for (let i = 0; i < this.maxRetries; i++) {
+            try {
+                return await operation();
+            }
+            catch (error) {
+                lastError = error;
+                console.warn(`Email operation failed (attempt ${i + 1}/${this.maxRetries}):`, error);
+                if (i < this.maxRetries - 1) {
+                    await new Promise(resolve => setTimeout(resolve, this.retryDelay * Math.pow(2, i)));
+                }
+            }
         }
-        return EmailService.instance;
+        throw lastError;
     }
     async verifyConnection() {
         try {
@@ -43,49 +46,13 @@ class EmailService {
                 user: process.env.EMAIL_USER,
                 hasPass: !!process.env.EMAIL_PASS
             });
-            await this.transporter.verify();
+            await this.retryOperation(() => this.transporter.verify());
             console.log('Email connection verified successfully');
             return true;
         }
         catch (error) {
             console.error('Email connection verification failed:', error);
             return false;
-        }
-    }
-    async retryOperation(operation, retries = this.retryCount) {
-        try {
-            return await operation();
-        }
-        catch (error) {
-            if (retries > 0) {
-                console.log(`Retrying operation. Attempts left: ${retries}`);
-                await new Promise(resolve => setTimeout(resolve, this.retryDelay));
-                return this.retryOperation(operation, retries - 1);
-            }
-            throw error;
-        }
-    }
-    async sendEmail(options) {
-        try {
-            // Verify connection before sending
-            const isConnected = await this.verifyConnection();
-            if (!isConnected) {
-                throw new error_handler_1.AppError(500, 'Email service is not available');
-            }
-            const mailOptions = {
-                from: `"Chat App" <${process.env.EMAIL_USER}>`,
-                to: options.to,
-                subject: options.subject,
-                html: options.html
-            };
-            await this.retryOperation(async () => {
-                const info = await this.transporter.sendMail(mailOptions);
-                console.log('Email sent successfully:', info.messageId);
-            });
-        }
-        catch (error) {
-            console.error('Failed to send email:', error);
-            throw new error_handler_1.AppError(500, 'Failed to send email. Please try again later.');
         }
     }
     async sendVerificationEmail(email, token) {
@@ -101,13 +68,25 @@ class EmailService {
         <p style="margin-top: 20px; color: #666;">
           If you didn't create an account, you can safely ignore this email.
         </p>
+        <p style="margin-top: 20px; color: #666; font-size: 12px;">
+          This verification link will expire in 24 hours.
+        </p>
       </div>
     `;
-        await this.sendEmail({
+        await this.retryOperation(() => this.sendEmail({
             to: email,
             subject: 'Verify Your Email',
             html
-        });
+        }));
+    }
+    async sendEmail(options) {
+        const mailOptions = {
+            from: process.env.EMAIL_FROM,
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+        };
+        await this.retryOperation(() => this.transporter.sendMail(mailOptions));
     }
     async sendResetPasswordEmail(email, resetUrl) {
         const html = `
@@ -130,4 +109,4 @@ class EmailService {
         });
     }
 }
-exports.emailService = EmailService.getInstance();
+exports.emailService = new EmailService();

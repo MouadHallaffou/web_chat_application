@@ -18,7 +18,7 @@ const authenticate = async (req, res, next) => {
         // Verify token
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'your-secret-key');
         // Get user from token
-        const user = await user_model_1.User.findById(decoded.id).select('-password');
+        const user = await user_model_1.User.findById(decoded.userId).select('-password');
         if (!user) {
             throw new error_handler_1.AppError(401, 'User not found');
         }

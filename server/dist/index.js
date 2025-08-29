@@ -18,6 +18,8 @@ console.log('Environment variables loaded:', {
 const app_1 = __importDefault(require("./app"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const email_service_1 = require("./services/email.service");
+const http_1 = require("http");
+const socket_service_1 = require("./services/socket.service");
 const startServer = async () => {
     try {
         // Connect to MongoDB
@@ -30,11 +32,16 @@ const startServer = async () => {
             console.warn('Email service is not available:', error.message);
             console.warn('The application will continue to run, but email features will not work.');
         });
-        // Start server
+        // Create HTTP server
         const PORT = process.env.PORT || 5000;
-        app_1.default.listen(PORT, () => {
+        const server = (0, http_1.createServer)(app_1.default);
+        // Initialize WebSocket service
+        socket_service_1.socketService.initialize(server);
+        // Start server
+        server.listen(Number(PORT), 'localhost', () => {
             console.log(`Server is running on port ${PORT}`);
             console.log(`Health check available at: http://localhost:${PORT}/api/health`);
+            console.log(`WebSocket server initialized`);
         });
     }
     catch (error) {

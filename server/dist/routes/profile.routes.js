@@ -9,4 +9,5 @@ const auth_1 = require("../middlewares/auth");
 const router = express_1.default.Router();
 // Protected routes
 router.put('/edit', auth_1.authenticate, profile_controller_1.updateProfile);
+router.delete('/delete', auth_1.authenticate, profile_controller_1.deleteAccount);
 exports.default = router;

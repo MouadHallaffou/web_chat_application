@@ -23,8 +23,8 @@ const initializeDatabase = async () => {
         if (!adminExists) {
             await user_model_1.User.create({
                 username: 'admin',
-                email: 'admin@chatbot.com',
-                password: 'Admin123!',
+                email: 'admin@gmail.com',
+                password: 'admin@123',
                 role: 'admin',
                 isVerified: true,
                 status: 'offline',

@@ -8,6 +8,9 @@ const cors_1 = __importDefault(require("cors"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const profile_routes_1 = __importDefault(require("./routes/profile.routes"));
+const message_routes_1 = __importDefault(require("./routes/message.routes"));
+const friendship_routes_1 = __importDefault(require("./routes/friendship.routes"));
+const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const error_handler_1 = require("./middlewares/error-handler");
 const path_1 = __importDefault(require("path"));
 // Create Express application
@@ -17,7 +20,7 @@ app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 // CORS configuration
 app.use((0, cors_1.default)({
-    origin: ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:8080'],
+    origin: ['http://localhost:8080', 'http://localhost:8081'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -26,6 +29,9 @@ app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../
 // Routes
 app.use('/api/auth', auth_routes_1.default);
 app.use('/api/profile', profile_routes_1.default);
+app.use('/api', message_routes_1.default);
+app.use('/api/friendship', friendship_routes_1.default);
+app.use('/api/chat', chat_routes_1.default);
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({

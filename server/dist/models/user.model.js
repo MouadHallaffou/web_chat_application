@@ -39,14 +39,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const userSchema = new mongoose_1.Schema({
     username: {
         type: String,
         required: [true, 'Username is required'],
-        unique: true,
         trim: true,
         minlength: [3, 'Username must be at least 3 characters long'],
-        maxlength: [20, 'Username cannot exceed 20 characters'],
+        maxlength: [30, 'Username cannot exceed 30 characters'],
     },
     email: {
         type: String,
@@ -59,7 +59,7 @@ const userSchema = new mongoose_1.Schema({
     password: {
         type: String,
         required: [true, 'Password is required'],
-        minlength: [6, 'Password must be at least 6 characters long'],
+        minlength: [8, 'Password must be at least 8 characters long'],
         select: false,
     },
     avatar: {
@@ -82,14 +82,19 @@ const userSchema = new mongoose_1.Schema({
     },
     isVerified: {
         type: Boolean,
-        default: false,
+        default: true,
     },
     verificationToken: String,
+    tokenExpiry: Date,
     resetPasswordToken: String,
     resetPasswordExpires: Date,
 }, {
     timestamps: true,
 });
+// Indexes
+userSchema.index({ email: 1 });
+userSchema.index({ status: 1 });
+userSchema.index({ lastSeen: 1 });
 // Hash password before saving
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password'))
@@ -111,5 +116,11 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
     catch (error) {
         throw error;
     }
+};
+// Generate JWT token
+userSchema.methods.generateAuthToken = function () {
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+    const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+    return jsonwebtoken_1.default.sign({ userId: this._id.toString() }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
 exports.User = mongoose_1.default.model('User', userSchema);
