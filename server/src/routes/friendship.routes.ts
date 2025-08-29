@@ -1,15 +1,36 @@
-import express from 'express';
+import { Router } from 'express';
 import { authenticate } from '../middlewares/auth';
-import { Friendship } from '../models/friendship.model';
-import { User } from '../models/user.model';
-import { Conversation } from '../models/conversation.model';
-import mongoose from 'mongoose';
-import { FriendInvitation } from '../models/friend-invitation.model';
+import {
+  searchUsers,
+  sendFriendInvitation,
+  getReceivedInvitations,
+  getSentInvitations,
+  respondToInvitation,
+  cancelInvitation,
+  getFriends,
+  removeFriend
+} from '../controllers/friendship.controller';
 
-const router = express.Router();
+const router = Router();
 
 // Toutes les routes nécessitent une authentification
 router.use(authenticate);
+
+// Routes pour la recherche d'utilisateurs
+router.get('/search', searchUsers);
+
+// Routes pour les invitations
+router.post('/invitations', sendFriendInvitation);
+router.get('/invitations/received', getReceivedInvitations);
+router.get('/invitations/sent', getSentInvitations);
+router.patch('/invitations/:invitationId/respond', respondToInvitation);
+router.delete('/invitations/:invitationId', cancelInvitation);
+
+// Routes pour les amis
+router.get('/friends', getFriends);
+router.delete('/friends/:friendId', removeFriend);
+
+export default router;
 
 // Récupérer la liste d'amis de l'utilisateur connecté
 router.get('/friends', async (req, res) => {

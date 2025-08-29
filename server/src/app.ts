@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes';
 import profileRoutes from './routes/profile.routes';
 import messageRoutes from './routes/message.routes';
 import friendshipRoutes from './routes/friendship.routes';
+import chatRoutes from './routes/chat.routes';
 import { errorHandler } from './middlewares/error-handler';
 import path from 'path';
 
@@ -17,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 app.use(cors({
-  origin: ['http://localhost:8080'],
+  origin: ['http://localhost:8080', 'http://localhost:8081'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -29,7 +30,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api', messageRoutes);
-app.use('/api', friendshipRoutes);
+app.use('/api/friendship', friendshipRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

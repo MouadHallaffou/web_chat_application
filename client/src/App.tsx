@@ -29,6 +29,7 @@ import SettingsPage from './pages/SettingsPage';
 import NotificationsPage from './pages/NotificationsPage';
 import FriendsPage from './pages/FriendsPage';
 import TestPage from './pages/TestPage';
+import ApiDebugPage from './pages/ApiDebugPage';
 
 function App() {
   return (
@@ -37,7 +38,7 @@ function App() {
         <div className="min-h-screen bg-background text-foreground">
           <Routes>
             <Route path="/" element={<Navigate to="/home" replace />} />
-            
+
             {/* Public auth routes */}
             <Route path="/login" element={
               <PublicRoute>
@@ -55,7 +56,7 @@ function App() {
               </PublicRoute>
             } />
             <Route path="/reset-password" element={<ResetPasswordForm />} />
-            
+
             {/* Protected routes with MainLayout */}
             <Route path="/" element={
               <AuthGuard>
@@ -65,6 +66,7 @@ function App() {
               <Route path="/home" element={<HomePage />} />
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/test" element={<TestPage />} />
+              <Route path="/api-debug" element={<ApiDebugPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/friends" element={<FriendsPage />} />

@@ -42,7 +42,7 @@ const startServer = async () => {
     socketService.initialize(server);
     
     // Start server
-    server.listen(PORT, () => {
+    server.listen(Number(PORT), 'localhost', () => {
       console.log(`Server is running on port ${PORT}`);
       console.log(`Health check available at: http://localhost:${PORT}/api/health`);
       console.log(`WebSocket server initialized`);

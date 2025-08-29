@@ -54,6 +54,7 @@ export interface UserSearchResult {
   avatar: string;
   status: string;
   lastSeen: string;
+  relationshipStatus?: string;
 }
 
 export interface UserSearchResponse {
@@ -64,7 +65,7 @@ export interface UserSearchResponse {
 export const friendshipService = {
   // Récupérer la liste d'amis
   async getFriends(): Promise<FriendsResponse> {
-    const response = await api.get('/friends');
+    const response = await api.get('/friendship/friends');
     return response.data;
   },
 
@@ -76,7 +77,7 @@ export const friendshipService = {
 
   // Envoyer une demande d'amitié
   async sendFriendRequest(recipientId: string): Promise<any> {
-    const response = await api.post('/friends/request', { recipientId });
+    const response = await api.post('/friendship/invitations', { receiverId: recipientId });
     return response.data;
   },
 
@@ -88,25 +89,27 @@ export const friendshipService = {
 
   // Récupérer les invitations d'amis reçues (pending)
   async getFriendInvitations(): Promise<FriendInvitationsResponse> {
-    const response = await api.get('/friend-invitations');
+    const response = await api.get('/friendship/invitations/received');
     return response.data;
   },
 
   // Accepter ou refuser une invitation d'ami
   async respondToInvitation(friendshipId: string, status: 'accepted' | 'rejected'): Promise<any> {
-    const response = await api.put(`/friends/${friendshipId}/respond`, { status });
+    const action = status === 'accepted' ? 'accept' : 'reject';
+    const response = await api.patch(`/friendship/invitations/${friendshipId}/respond`, { action });
     return response.data;
   },
 
   // Accepter ou refuser une invitation d'ami (nouvelle route)
   async respondToFriendInvitation(invitationId: string, status: 'accepted' | 'rejected'): Promise<any> {
-    const response = await api.put(`/friend-invitations/${invitationId}/respond`, { status });
+    const action = status === 'accepted' ? 'accept' : 'reject';
+    const response = await api.patch(`/friendship/invitations/${invitationId}/respond`, { action });
     return response.data;
   },
 
   // Rechercher des utilisateurs par username
   async searchUsers(username: string): Promise<UserSearchResponse> {
-    const response = await api.get('/users/search', { params: { username } });
+    const response = await api.get('/friendship/search', { params: { query: username } });
     return response.data;
   }
 }; 
