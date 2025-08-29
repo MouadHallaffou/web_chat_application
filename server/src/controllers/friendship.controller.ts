@@ -233,28 +233,42 @@ export const respondToInvitation = async (
   next: NextFunction
 ) => {
   try {
+    console.log('=== RESPOND TO INVITATION ===');
+    console.log('Params:', req.params);
+    console.log('Body:', req.body);
+    console.log('User:', req.user);
+    
     const { invitationId } = req.params;
     const { action } = req.body; // 'accept' ou 'reject'
     const userId = (req.user as any)._id;
 
+    console.log(`Processing invitation ${invitationId} with action ${action} for user ${userId}`);
+
     if (!mongoose.isValidObjectId(invitationId)) {
+      console.log('Invalid invitation ID');
       return next(new AppError(400, 'ID d\'invitation invalide'));
     }
 
     if (!['accept', 'reject'].includes(action)) {
+      console.log('Invalid action:', action);
       return next(new AppError(400, 'Action invalide. Utilisez "accept" ou "reject"'));
     }
 
     const invitation = await FriendInvitation.findById(invitationId);
+    console.log('Found invitation:', invitation);
+    
     if (!invitation) {
+      console.log('Invitation not found');
       return next(new AppError(404, 'Invitation non trouvée'));
     }
 
     if (!invitation.receiverId.equals(userId)) {
+      console.log('User is not the receiver of this invitation');
       return next(new AppError(403, 'Vous ne pouvez répondre qu\'aux invitations qui vous sont adressées'));
     }
 
     if (invitation.status !== 'pending') {
+      console.log('Invitation already processed with status:', invitation.status);
       return next(new AppError(400, 'Cette invitation a déjà été traitée'));
     }
 

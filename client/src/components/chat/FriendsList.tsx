@@ -178,10 +178,14 @@ const FriendsList = ({ friends, onSelectFriend, selectedFriend }: FriendsListPro
 
   // Handler accepter/refuser invitation
   const handleRespond = async (invitationId: string, status: 'accepted' | 'rejected') => {
+    console.log(`Tentative de réponse à l'invitation ${invitationId} avec status: ${status}`);
     setRespondingId(invitationId);
     setRespondError(null);
     try {
-      await friendshipService.respondToFriendInvitation(invitationId, status);
+      console.log('Appel de friendshipService.respondToFriendInvitation...');
+      const response = await friendshipService.respondToFriendInvitation(invitationId, status);
+      console.log('Réponse reçue:', response);
+
       await loadFriendInvitations();
       await loadFriends(); // Recharger les amis car une nouvelle amitié peut être créée
 
@@ -205,7 +209,15 @@ const FriendsList = ({ friends, onSelectFriend, selectedFriend }: FriendsListPro
         }, 500);
       }
     } catch (err) {
-      setRespondError("Erreur lors de la réponse à l'invitation");
+      console.error('Erreur détaillée lors de la réponse à l\'invitation:', err);
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as any;
+        console.error('Status:', axiosErr.response?.status);
+        console.error('Data:', axiosErr.response?.data);
+        setRespondError(`Erreur lors de la réponse à l'invitation: ${axiosErr.response?.data?.message || axiosErr.message}`);
+      } else {
+        setRespondError("Erreur lors de la réponse à l'invitation");
+      }
     } finally {
       setRespondingId(null);
     }
