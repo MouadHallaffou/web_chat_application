@@ -1,0 +1,27 @@
+apiVersion: v2
+name: chatapp
+description: A Helm chart for ChatApp - Real-time messaging application
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+home: https://github.com/MouadHallaffou/web_chat_application
+sources:
+  - https://github.com/MouadHallaffou/web_chat_application
+maintainers:
+  - name: Your Name
+    email: your-email@domain.com
+keywords:
+  - chat
+  - messaging
+  - realtime
+  - nodejs
+  - react
+dependencies:
+  - name: mongodb
+    version: 13.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: mongodb.enabled
+  - name: redis
+    version: 17.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

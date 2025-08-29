@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Make all scripts executable
+chmod +x scripts/*.sh
+
+echo "✅ DevOps setup completed!"
+echo ""
+echo "🚀 Quick start commands:"
+echo ""
+echo "1. Setup environment:"
+echo "   cp .env.example .env"
+echo "   # Edit .env with your settings"
+echo ""
+echo "2. Deploy with Docker:"
+echo "   ./scripts/deploy.sh docker development"
+echo ""
+echo "3. Check health:"
+echo "   ./scripts/health-check.sh docker"
+echo ""
+echo "4. Access services:"
+echo "   Frontend: http://localhost:3000"
+echo "   Backend: http://localhost:5000"
+echo "   MongoDB: localhost:27017"
+echo "   Redis: localhost:6379"
+echo ""
+echo "5. Deploy monitoring (optional):"
+echo "   ./scripts/deploy.sh docker development --monitoring"
+echo "   Grafana: http://localhost:3001 (admin/grafana123)"
+echo ""
+echo "📖 Read DEVOPS_README.md for complete documentation"

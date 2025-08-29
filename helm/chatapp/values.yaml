@@ -1,0 +1,107 @@
+# Default values for chatapp
+replicaCount:
+  frontend: 2
+  backend: 3
+
+image:
+  registry: your-registry.com
+  repository:
+    frontend: chatapp/frontend
+    backend: chatapp/backend
+  tag: latest
+  pullPolicy: Always
+  pullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  frontend:
+    port: 80
+  backend:
+    port: 5000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: your-domain.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+    - host: api.your-domain.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: backend
+  tls:
+    - secretName: chatapp-tls
+      hosts:
+        - your-domain.com
+        - api.your-domain.com
+
+resources:
+  frontend:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 125m
+      memory: 128Mi
+  backend:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+autoscaling:
+  enabled: true
+  frontend:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+  backend:
+    minReplicas: 3
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 80
+
+# External dependencies
+mongodb:
+  enabled: true
+  auth:
+    rootUser: admin
+    rootPassword: "SecureMongoPassword2024!"
+    database: chatapp_prod
+  persistence:
+    enabled: true
+    size: 10Gi
+
+redis:
+  enabled: true
+  auth:
+    password: "SecureRedisPassword2024!"
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+
+# Application configuration
+config:
+  nodeEnv: production
+  jwtExpiresIn: "7d"
+  corsOrigin: "https://www.chatapp.com"
+  logLevel: info
+
+secrets:
+  jwtSecret: "ultra-secure-jwt-secret-key-production-2025"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

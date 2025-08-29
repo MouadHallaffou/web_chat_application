@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatapp-frontend
+  namespace: chatapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chatapp-frontend
+  template:
+    metadata:
+      labels:
+        app: chatapp-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: your-registry/chatapp-frontend:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "125m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatapp-frontend-service
+  namespace: chatapp
+spec:
+  selector:
+    app: chatapp-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP

@@ -1,0 +1,104 @@
+---
+# Kubernetes Deployment Tasks
+- name: Check if kubectl is available
+  command: kubectl version --client
+  register: kubectl_check
+  failed_when: false
+  changed_when: false
+
+- name: Fail if kubectl is not available
+  fail:
+    msg: "kubectl is not installed or not in PATH"
+  when: kubectl_check.rc != 0
+
+- name: Apply Kubernetes namespace
+  k8s:
+    src: "{{ playbook_dir }}/../k8s/namespace.yaml"
+    state: present
+    wait: true
+
+- name: Apply ConfigMaps and Secrets
+  k8s:
+    src: "{{ playbook_dir }}/../k8s/configmap-secrets.yaml"
+    state: present
+    wait: true
+
+- name: Apply Storage (PVC)
+  k8s:
+    src: "{{ playbook_dir }}/../k8s/storage.yaml"
+    state: present
+    wait: true
+
+- name: Deploy MongoDB
+  k8s:
+    src: "{{ playbook_dir }}/../k8s/mongodb.yaml"
+    state: present
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 600
+
+- name: Deploy Redis
+  k8s:
+    src: "{{ playbook_dir }}/../k8s/redis.yaml"
+    state: present
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 300
+
+- name: Deploy Backend
+  k8s:
+    src: "{{ playbook_dir }}/../k8s/backend.yaml"
+    state: present
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 600
+
+- name: Deploy Frontend
+  k8s:
+    src: "{{ playbook_dir }}/../k8s/frontend.yaml"
+    state: present
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 300
+
+- name: Apply Ingress
+  k8s:
+    src: "{{ playbook_dir }}/../k8s/ingress.yaml"
+    state: present
+    wait: true
+
+- name: Wait for all pods to be ready
+  k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: chatapp
+    wait: true
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 600
+
+- name: Get service URLs
+  k8s_info:
+    api_version: v1
+    kind: Service
+    namespace: chatapp
+  register: services
+
+- name: Display deployment information
+  debug:
+    msg: |
+      ================================
+      Kubernetes Deployment Complete!
+      ================================
+      Namespace: chatapp
+      Services: {{ services.resources | map(attribute='metadata.name') | list }}
+      ================================

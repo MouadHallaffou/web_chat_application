@@ -1,0 +1,81 @@
+# Ansible Inventory for ChatApp Deployment
+all:
+  vars:
+    ansible_user: ubuntu
+    ansible_ssh_private_key_file: ~/.ssh/id_rsa
+
+# Docker Swarm / Single Node Deployments
+docker_nodes:
+  hosts:
+    docker-node-1:
+      ansible_host: 192.168.1.10
+    docker-node-2:
+      ansible_host: 192.168.1.11
+    docker-node-3:
+      ansible_host: 192.168.1.12
+
+docker_managers:
+  hosts:
+    docker-node-1:
+      ansible_host: 192.168.1.10
+
+docker_workers:
+  hosts:
+    docker-node-2:
+      ansible_host: 192.168.1.11
+    docker-node-3:
+      ansible_host: 192.168.1.12
+
+# Kubernetes Cluster
+k8s_masters:
+  hosts:
+    k8s-master-1:
+      ansible_host: 192.168.1.20
+    k8s-master-2:
+      ansible_host: 192.168.1.21
+    k8s-master-3:
+      ansible_host: 192.168.1.22
+
+k8s_workers:
+  hosts:
+    k8s-worker-1:
+      ansible_host: 192.168.1.23
+    k8s-worker-2:
+      ansible_host: 192.168.1.24
+    k8s-worker-3:
+      ansible_host: 192.168.1.25
+
+k8s_cluster:
+  children:
+    k8s_masters:
+    k8s_workers:
+
+# Load Balancers
+load_balancers:
+  hosts:
+    lb-1:
+      ansible_host: 192.168.1.30
+
+# Databases (if external)
+databases:
+  hosts:
+    db-1:
+      ansible_host: 192.168.1.40
+
+# Development environment
+development:
+  hosts:
+    dev-server:
+      ansible_host: 192.168.1.50
+
+# Staging environment
+staging:
+  hosts:
+    staging-server:
+      ansible_host: 192.168.1.60
+
+# Production environment
+production:
+  children:
+    k8s_cluster:
+    load_balancers:

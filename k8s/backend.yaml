@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatapp-backend
+  namespace: chatapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: chatapp-backend
+  template:
+    metadata:
+      labels:
+        app: chatapp-backend
+    spec:
+      containers:
+        - name: backend
+          image: your-registry/chatapp-backend:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: chatapp-config
+                  key: NODE_ENV
+            - name: MONGODB_URI
+              value: "mongodb://$(MONGO_ROOT_USER):$(MONGO_ROOT_PASSWORD)@mongodb-service:27017/$(MONGO_DB_NAME)?authSource=admin"
+            - name: MONGO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: chatapp-secrets
+                  key: MONGO_ROOT_USER
+            - name: MONGO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: chatapp-secrets
+                  key: MONGO_ROOT_PASSWORD
+            - name: MONGO_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: chatapp-config
+                  key: MONGO_DB_NAME
+            - name: REDIS_URL
+              value: "redis://:$(REDIS_PASSWORD)@redis-service:6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: chatapp-secrets
+                  key: REDIS_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: chatapp-secrets
+                  key: JWT_SECRET
+            - name: JWT_EXPIRES_IN
+              valueFrom:
+                configMapKeyRef:
+                  name: chatapp-config
+                  key: JWT_EXPIRES_IN
+            - name: CORS_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: chatapp-config
+                  key: CORS_ORIGIN
+          volumeMounts:
+            - name: uploads-storage
+              mountPath: /app/uploads
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: uploads-storage
+          persistentVolumeClaim:
+            claimName: uploads-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatapp-backend-service
+  namespace: chatapp
+spec:
+  selector:
+    app: chatapp-backend
+  ports:
+    - port: 5000
+      targetPort: 5000
+  type: ClusterIP

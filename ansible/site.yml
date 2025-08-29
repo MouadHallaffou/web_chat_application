@@ -1,0 +1,46 @@
+---
+# Main deployment playbook for ChatApp
+- name: Deploy ChatApp Infrastructure
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    deployment_type: "{{ deploy_type | default('docker') }}" # docker, k8s, or swarm
+    environment: "{{ env | default('development') }}"
+
+  tasks:
+    - name: Include Docker deployment
+      include_tasks: playbooks/docker-deployment.yml
+      when: deployment_type == "docker"
+
+    - name: Include Docker Swarm deployment
+      include_tasks: playbooks/docker-swarm.yml
+      when: deployment_type == "swarm"
+
+    - name: Include Kubernetes deployment
+      include_tasks: playbooks/k8s-deployment.yml
+      when: deployment_type == "k8s"
+
+- name: Setup Infrastructure Servers
+  hosts: "{{ target_hosts | default('all') }}"
+  become: true
+  gather_facts: true
+
+  roles:
+    - common
+    - security
+    - monitoring
+    - docker
+    - kubernetes
+
+  post_tasks:
+    - name: Display deployment summary
+      debug:
+        msg: |
+          ================================
+          ChatApp Deployment Complete!
+          ================================
+          Environment: {{ environment }}
+          Deployment Type: {{ deployment_type }}
+          Target Hosts: {{ ansible_play_hosts }}
+          ================================

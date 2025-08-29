@@ -1,0 +1,63 @@
+---
+# Docker Deployment Tasks
+- name: Ensure Docker is installed
+  package:
+    name: docker.io
+    state: present
+
+- name: Ensure Docker Compose is installed
+  pip:
+    name: docker-compose
+    state: present
+
+- name: Create application directory
+  file:
+    path: /opt/chatapp
+    state: directory
+    mode: "0755"
+
+- name: Copy Docker Compose file
+  copy:
+    src: "{{ playbook_dir }}/../docker-compose.yml"
+    dest: /opt/chatapp/docker-compose.yml
+    mode: "0644"
+
+- name: Copy environment file
+  template:
+    src: "{{ playbook_dir }}/../.env.{{ environment }}"
+    dest: /opt/chatapp/.env
+    mode: "0600"
+
+- name: Pull Docker images
+  command: docker-compose pull
+  args:
+    chdir: /opt/chatapp
+
+- name: Start ChatApp services
+  command: docker-compose up -d
+  args:
+    chdir: /opt/chatapp
+
+- name: Wait for services to be ready
+  wait_for:
+    port: "{{ item }}"
+    host: localhost
+    delay: 10
+    timeout: 300
+  loop:
+    - 3000 # Frontend
+    - 5000 # Backend
+    - 27017 # MongoDB
+    - 6379 # Redis
+
+- name: Verify deployment
+  uri:
+    url: "http://localhost:{{ item }}"
+    method: GET
+    status_code: 200
+  loop:
+    - 3000
+    - 5000
+  register: health_check
+  retries: 5
+  delay: 10
