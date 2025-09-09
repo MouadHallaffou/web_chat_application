@@ -1,4 +1,4 @@
-import { Server as SocketIOServer } from 'socket.io';
+import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user.model';
@@ -39,8 +39,8 @@ class SocketService {
           throw new AppError(401, 'Authentication token required');
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { id: string };
-        const user = await User.findById(decoded.id).select('-password');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
+        const user = await User.findById(decoded.userId).select('-password');
         
         if (!user) {
           throw new AppError(401, 'User not found');

@@ -109,9 +109,9 @@ userSchema.methods.generateAuthToken = function(): string {
   const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
   
   return jwt.sign(
-    { userId: this._id.toString() },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    { userId: this._id.toString() } as any,
+    JWT_SECRET as Secret,
+    { expiresIn: JWT_EXPIRES_IN } as any
   );
 };
 

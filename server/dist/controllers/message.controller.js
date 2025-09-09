@@ -52,7 +52,10 @@ const sendMessage = async (req, res, next) => {
     session.startTransaction();
     try {
         const { conversationId, content, type = 'text' } = req.body;
-        const senderId = req.user._id;
+        const senderId = req.user?._id;
+        if (!senderId) {
+            throw new error_handler_1.AppError(401, 'Not authenticated');
+        }
         // Validate conversationId
         if (!mongoose_1.default.Types.ObjectId.isValid(conversationId)) {
             throw new error_handler_1.AppError(400, 'Invalid conversation ID');
@@ -115,7 +118,10 @@ const deleteMessage = async (req, res, next) => {
     session.startTransaction();
     try {
         const { messageId } = req.params;
-        const userId = req.user._id;
+        const userId = req.user?._id;
+        if (!userId) {
+            throw new error_handler_1.AppError(401, 'Not authenticated');
+        }
         const message = await message_model_1.Message.findOne({
             _id: messageId,
             senderId: userId

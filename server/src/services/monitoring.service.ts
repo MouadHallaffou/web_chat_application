@@ -1,4 +1,4 @@
-import { logger } from './logger.service';
+// Replaced custom logger with console to avoid missing module
 import { cacheService } from './cache.service';
 import mongoose from 'mongoose';
 
@@ -31,7 +31,7 @@ export class MonitoringService {
       // Start periodic metrics collection
       setInterval(() => this.collectMetrics(), 60000); // Every minute
     } catch (error) {
-      logger.error('Failed to initialize metrics:', error);
+      console.error('Failed to initialize metrics:', error);
     }
   }
 
@@ -55,7 +55,7 @@ export class MonitoringService {
       // Store metrics in Redis for persistence
       await this.persistMetrics();
     } catch (error) {
-      logger.error('Failed to collect metrics:', error);
+      console.error('Failed to collect metrics:', error);
     }
   }
 
@@ -64,7 +64,7 @@ export class MonitoringService {
       this.metrics.set(name, value);
       await cacheService.setHash('metrics', name, value);
     } catch (error) {
-      logger.error(`Failed to update metric ${name}:`, error);
+      console.error(`Failed to update metric ${name}:`, error);
     }
   }
 
@@ -73,7 +73,7 @@ export class MonitoringService {
       const metrics = Object.fromEntries(this.metrics);
       await cacheService.set('metrics:latest', metrics, this.METRICS_TTL);
     } catch (error) {
-      logger.error('Failed to persist metrics:', error);
+      console.error('Failed to persist metrics:', error);
     }
   }
 
@@ -82,7 +82,7 @@ export class MonitoringService {
       const currentValue = this.metrics.get(name) || 0;
       await this.updateMetric(name, currentValue + value);
     } catch (error) {
-      logger.error(`Failed to increment metric ${name}:`, error);
+      console.error(`Failed to increment metric ${name}:`, error);
     }
   }
 
@@ -91,7 +91,7 @@ export class MonitoringService {
       const currentValue = this.metrics.get(name) || 0;
       await this.updateMetric(name, Math.max(0, currentValue - value));
     } catch (error) {
-      logger.error(`Failed to decrement metric ${name}:`, error);
+      console.error(`Failed to decrement metric ${name}:`, error);
     }
   }
 
@@ -99,7 +99,7 @@ export class MonitoringService {
     try {
       return this.metrics.get(name) || 0;
     } catch (error) {
-      logger.error(`Failed to get metric ${name}:`, error);
+      console.error(`Failed to get metric ${name}:`, error);
       return 0;
     }
   }
@@ -108,7 +108,7 @@ export class MonitoringService {
     try {
       return Object.fromEntries(this.metrics);
     } catch (error) {
-      logger.error('Failed to get all metrics:', error);
+      console.error('Failed to get all metrics:', error);
       return {};
     }
   }
@@ -124,7 +124,7 @@ export class MonitoringService {
       );
       return history || {};
     } catch (error) {
-      logger.error(`Failed to get metrics history for ${metricName}:`, error);
+      console.error(`Failed to get metrics history for ${metricName}:`, error);
       return {};
     }
   }
@@ -138,16 +138,16 @@ export class MonitoringService {
       await this.updateMetric('average_response_time', newAvg);
       await this.incrementMetric('response_count');
     } catch (error) {
-      logger.error('Failed to record response time:', error);
+      console.error('Failed to record response time:', error);
     }
   }
 
   public async recordError(error: Error) {
     try {
       await this.incrementMetric('error_count');
-      logger.error('Application error:', error);
+      console.error('Application error:', error);
     } catch (err) {
-      logger.error('Failed to record error:', err);
+      console.error('Failed to record error:', err);
     }
   }
 }

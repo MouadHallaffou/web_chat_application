@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 
 export interface IConversation extends Document {
   participants: mongoose.Types.ObjectId[];
@@ -13,9 +13,16 @@ export interface IConversation extends Document {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  markAsRead(userId: mongoose.Types.ObjectId): Promise<IConversation>;
+  incrementUnreadCount(userId: mongoose.Types.ObjectId): Promise<IConversation>;
 }
 
-const conversationSchema = new Schema<IConversation>(
+interface IConversationModel extends Model<IConversation> {
+  findOrCreateDirectConversation(user1Id: mongoose.Types.ObjectId, user2Id: mongoose.Types.ObjectId): Promise<IConversation>;
+  getUserConversations(userId: mongoose.Types.ObjectId): Promise<IConversation[]>;
+}
+
+const conversationSchema = new Schema<IConversation, IConversationModel>(
   {
     participants: [{
       type: Schema.Types.ObjectId,
@@ -72,7 +79,7 @@ conversationSchema.pre('save', function(next) {
 });
 
 // Static method to find or create direct conversation between two users
-conversationSchema.statics.findOrCreateDirectConversation = async function(user1Id: mongoose.Types.ObjectId, user2Id: mongoose.Types.ObjectId) {
+conversationSchema.statics.findOrCreateDirectConversation = async function(this: IConversationModel, user1Id: mongoose.Types.ObjectId, user2Id: mongoose.Types.ObjectId) {
   const participants = [user1Id, user2Id].sort();
   
   let conversation = await this.findOne({
@@ -92,7 +99,7 @@ conversationSchema.statics.findOrCreateDirectConversation = async function(user1
 };
 
 // Static method to get conversations for a user
-conversationSchema.statics.getUserConversations = function(userId: mongoose.Types.ObjectId) {
+conversationSchema.statics.getUserConversations = function(this: IConversationModel, userId: mongoose.Types.ObjectId) {
   return this.find({
     participants: userId,
     isActive: true
@@ -103,16 +110,16 @@ conversationSchema.statics.getUserConversations = function(userId: mongoose.Type
 };
 
 // Method to mark messages as read for a user
-conversationSchema.methods.markAsRead = function(userId: mongoose.Types.ObjectId) {
+conversationSchema.methods.markAsRead = function(this: IConversation, userId: mongoose.Types.ObjectId) {
   this.unreadCount.set(userId.toString(), 0);
   return this.save();
 };
 
 // Method to increment unread count for a user
-conversationSchema.methods.incrementUnreadCount = function(userId: mongoose.Types.ObjectId) {
+conversationSchema.methods.incrementUnreadCount = function(this: IConversation, userId: mongoose.Types.ObjectId) {
   const currentCount = this.unreadCount.get(userId.toString()) || 0;
   this.unreadCount.set(userId.toString(), currentCount + 1);
   return this.save();
 };
 
-export const Conversation = mongoose.model<IConversation>('Conversation', conversationSchema); 
+export const Conversation = mongoose.model<IConversation, IConversationModel>('Conversation', conversationSchema);

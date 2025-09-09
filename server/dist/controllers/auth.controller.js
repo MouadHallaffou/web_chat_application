@@ -251,10 +251,9 @@ exports.githubCallback = [
     }
 ];
 exports.linkedinAuth = passport_1.default.authenticate('linkedin');
-exports.linkedinCallback = passport_1.default.authenticate('linkedin', {
-    failureRedirect: '/login',
-    session: false
-}, (req, res) => {
+exports.linkedinCallback = passport_1.default.authenticate('linkedin', { failureRedirect: '/login', session: false }, (req, res) => {
+    if (!req.user)
+        return res.status(401).send('User not found after LinkedIn auth');
     const token = req.user.generateAuthToken();
     res.redirect(`/auth/success?token=${token}`);
 });

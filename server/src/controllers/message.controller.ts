@@ -61,7 +61,10 @@ export const sendMessage = async (
 
   try {
     const { conversationId, content, type = 'text' } = req.body;
-    const senderId = req.user._id;
+    const senderId = (req.user as any)?._id;
+    if (!senderId) {
+      throw new AppError(401, 'Not authenticated');
+    }
 
     // Validate conversationId
     if (!mongoose.Types.ObjectId.isValid(conversationId)) {
@@ -155,7 +158,10 @@ export const deleteMessage = async (
 
   try {
     const { messageId } = req.params;
-    const userId = req.user._id;
+    const userId = (req.user as any)?._id;
+    if (!userId) {
+      throw new AppError(401, 'Not authenticated');
+    }
 
     const message = await Message.findOne({
       _id: messageId,

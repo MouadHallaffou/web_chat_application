@@ -106,6 +106,15 @@ messageSchema.methods.markAsReadBy = function (userId) {
         });
     }
 };
+messageSchema.methods.markAsRead = function (userId) {
+    if (!this.readBy.some((entry) => entry.userId.toString() === userId.toString())) {
+        this.readBy.push({ userId, readAt: new Date() });
+    }
+    if (this.readBy.length > 0) {
+        this.status = 'read';
+    }
+    return this.save();
+};
 // Virtuel pour obtenir le nombre total de lectures
 messageSchema.virtual('readCount').get(function () {
     return this.readBy.length;
@@ -117,4 +126,20 @@ messageSchema.pre('save', function (next) {
     }
     next();
 });
+messageSchema.statics.markConversationAsRead = function (conversationId, userId) {
+    return this.updateMany({ conversationId, senderId: { $ne: userId }, 'readBy.userId': { $ne: userId } }, {
+        $push: { readBy: { userId, readAt: new Date() } },
+        $set: { status: 'read' }
+    });
+};
+messageSchema.statics.getConversationMessages = function (conversationId, options = {}) {
+    const { limit = 50, skip = 0, before } = options;
+    const query = { conversationId };
+    if (before)
+        query.createdAt = { $lt: before };
+    return this.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+};
 exports.Message = mongoose_1.default.model('Message', messageSchema);

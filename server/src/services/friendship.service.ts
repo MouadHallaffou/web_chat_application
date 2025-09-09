@@ -189,13 +189,13 @@ export class FriendshipService {
   static async getUserFriends(userId: mongoose.Types.ObjectId) {
     const friendships = await Friendship.getUserFriends(userId);
     
-    return friendships.map(friendship => {
+    return friendships.map((friendship: any) => {
       const friend = friendship.user1Id.toString() === userId.toString() 
         ? friendship.user2Id 
         : friendship.user1Id;
       
       return {
-        ...friend.toObject(),
+        ...(friend.toObject ? friend.toObject() : friend),
         friendshipId: friendship._id,
         lastInteractionAt: friendship.lastInteractionAt
       };

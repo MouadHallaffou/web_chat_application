@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 
 export interface IMessage extends Document {
   conversationId: mongoose.Types.ObjectId;
@@ -23,9 +23,17 @@ export interface IMessage extends Document {
   }[];
   createdAt: Date;
   updatedAt: Date;
+  isReadBy(userId: mongoose.Types.ObjectId): boolean;
+  markAsReadBy(userId: mongoose.Types.ObjectId): void;
+  markAsRead(userId: mongoose.Types.ObjectId): Promise<IMessage>;
 }
 
-const messageSchema = new Schema<IMessage>(
+interface IMessageModel extends Model<IMessage> {
+  markConversationAsRead(conversationId: mongoose.Types.ObjectId, userId: mongoose.Types.ObjectId): Promise<any>;
+  getConversationMessages(conversationId: mongoose.Types.ObjectId, options?: { limit?: number; skip?: number; before?: Date }): Promise<IMessage[]>;
+}
+
+const messageSchema = new Schema<IMessage, IMessageModel>(
   {
     conversationId: {
       type: Schema.Types.ObjectId,
@@ -94,13 +102,23 @@ messageSchema.methods.isReadBy = function(userId: mongoose.Types.ObjectId): bool
 };
 
 // Méthode pour marquer comme lu par un utilisateur
-messageSchema.methods.markAsReadBy = function(userId: mongoose.Types.ObjectId): void {
+messageSchema.methods.markAsReadBy = function(this: IMessage, userId: mongoose.Types.ObjectId): void {
   if (!this.isReadBy(userId)) {
     this.readBy.push({
       userId,
       readAt: new Date()
     });
   }
+};
+
+messageSchema.methods.markAsRead = function(this: IMessage, userId: mongoose.Types.ObjectId) {
+  if (!this.readBy.some((entry: any) => entry.userId.toString() === userId.toString())) {
+    this.readBy.push({ userId, readAt: new Date() });
+  }
+  if (this.readBy.length > 0) {
+    this.status = 'read';
+  }
+  return this.save();
 };
 
 // Virtuel pour obtenir le nombre total de lectures
@@ -116,4 +134,24 @@ messageSchema.pre('save', function(next) {
   next();
 });
 
-export const Message = mongoose.model<IMessage>('Message', messageSchema);
+messageSchema.statics.markConversationAsRead = function(this: IMessageModel, conversationId: mongoose.Types.ObjectId, userId: mongoose.Types.ObjectId) {
+  return this.updateMany(
+    { conversationId, senderId: { $ne: userId }, 'readBy.userId': { $ne: userId } },
+    {
+      $push: { readBy: { userId, readAt: new Date() } },
+      $set: { status: 'read' }
+    }
+  );
+};
+
+messageSchema.statics.getConversationMessages = function(this: IMessageModel, conversationId: mongoose.Types.ObjectId, options: { limit?: number; skip?: number; before?: Date } = {}) {
+  const { limit = 50, skip = 0, before } = options;
+  const query: any = { conversationId };
+  if (before) query.createdAt = { $lt: before };
+  return this.find(query)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+};
+
+export const Message = mongoose.model<IMessage, IMessageModel>('Message', messageSchema);

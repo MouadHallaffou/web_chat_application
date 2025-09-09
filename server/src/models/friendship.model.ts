@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 
 export interface IFriendship extends Document {
   user1Id: mongoose.Types.ObjectId;
@@ -10,7 +10,12 @@ export interface IFriendship extends Document {
   lastInteractionAt: Date; // Dernière interaction entre les amis
 }
 
-const friendshipSchema = new Schema<IFriendship>(
+interface IFriendshipModel extends Model<IFriendship> {
+  findFriendship(user1Id: mongoose.Types.ObjectId, user2Id: mongoose.Types.ObjectId): Promise<IFriendship | null>;
+  getUserFriends(userId: mongoose.Types.ObjectId): Promise<IFriendship[]>;
+}
+
+const friendshipSchema = new Schema<IFriendship, IFriendshipModel>(
   {
     user1Id: {
       type: Schema.Types.ObjectId,
@@ -71,4 +76,4 @@ friendshipSchema.statics.getUserFriends = function(userId: mongoose.Types.Object
   }).populate('user1Id user2Id', 'username email avatar status lastSeen');
 };
 
-export const Friendship = mongoose.model<IFriendship>('Friendship', friendshipSchema); 
+export const Friendship = mongoose.model<IFriendship, IFriendshipModel>('Friendship', friendshipSchema);

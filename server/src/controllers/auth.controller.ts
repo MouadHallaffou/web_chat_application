@@ -260,7 +260,7 @@ export const googleAuth = passport.authenticate('google', { scope: ['profile', '
 
 export const googleCallback = [
   passport.authenticate('google', { failureRedirect: '/login', session: false }),
-  (req, res) => {
+  (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).send('User not found after Google auth');
     }
@@ -284,13 +284,15 @@ export const githubCallback = [
 
 export const linkedinAuth = passport.authenticate('linkedin');
 
-export const linkedinCallback = passport.authenticate('linkedin', { 
-  failureRedirect: '/login',
-  session: false 
-}, (req, res) => {
-  const token = (req.user as any).generateAuthToken();
-  res.redirect(`/auth/success?token=${token}`);
-});
+export const linkedinCallback = passport.authenticate(
+  'linkedin',
+  { failureRedirect: '/login', session: false },
+  (req: Request, res: Response) => {
+    if (!req.user) return res.status(401).send('User not found after LinkedIn auth');
+    const token = (req.user as any).generateAuthToken();
+    res.redirect(`/auth/success?token=${token}`);
+  }
+);
 
 export const forgotPassword = async (
   req: Request,
@@ -454,7 +456,7 @@ export const logout = async (
   next: NextFunction
 ) => {
   try {
-    const userId = req.user?._id;
+    const userId = (req.user as any)?._id;
     if (!userId) {
       throw new AppError(401, 'Not authenticated');
     }

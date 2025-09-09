@@ -12,7 +12,7 @@ const fs_1 = __importDefault(require("fs"));
 // Configure multer for file upload
 const storage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
-        const userId = req.user?._id?.toString() || 'unknown';
+        const userId = (req.user?._id?.toString()) || 'unknown';
         const uploadDir = `uploads/avatars/${userId}`;
         if (!fs_1.default.existsSync(uploadDir)) {
             fs_1.default.mkdirSync(uploadDir, { recursive: true });
@@ -46,7 +46,10 @@ const updateProfile = async (req, res, next) => {
                 return next(new error_handler_1.AppError(400, err.message));
             }
             const { username, email, password, removeAvatar } = req.body;
-            const userId = req.user._id;
+            const userId = req.user?._id;
+            if (!userId) {
+                return next(new error_handler_1.AppError(401, 'Not authenticated'));
+            }
             // Check if username is already taken
             if (username) {
                 const existingUser = await user_model_1.User.findOne({ username, _id: { $ne: userId } });

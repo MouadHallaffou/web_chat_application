@@ -1,5 +1,4 @@
 import Redis from 'ioredis';
-import { logger } from './logger.service';
 
 export class CacheService {
   private static instance: CacheService;
@@ -18,11 +17,11 @@ export class CacheService {
     });
 
     this.redis.on('error', (error) => {
-      logger.error('Redis error:', error);
+      console.error('Redis error:', error);
     });
 
     this.redis.on('connect', () => {
-      logger.info('Redis connected successfully');
+      console.log('Redis connected successfully');
     });
   }
 
@@ -38,7 +37,7 @@ export class CacheService {
       const data = await this.redis.get(key);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      logger.error('Cache get error:', error);
+      console.error('Cache get error:', error);
       return null;
     }
   }
@@ -48,7 +47,7 @@ export class CacheService {
       const serializedValue = JSON.stringify(value);
       await this.redis.set(key, serializedValue, 'EX', ttl);
     } catch (error) {
-      logger.error('Cache set error:', error);
+      console.error('Cache set error:', error);
     }
   }
 
@@ -56,7 +55,7 @@ export class CacheService {
     try {
       await this.redis.del(key);
     } catch (error) {
-      logger.error('Cache delete error:', error);
+      console.error('Cache delete error:', error);
     }
   }
 
@@ -65,7 +64,7 @@ export class CacheService {
       const result = await this.redis.exists(key);
       return result === 1;
     } catch (error) {
-      logger.error('Cache exists error:', error);
+      console.error('Cache exists error:', error);
       return false;
     }
   }
@@ -74,7 +73,7 @@ export class CacheService {
     try {
       await this.redis.flushall();
     } catch (error) {
-      logger.error('Cache flush error:', error);
+      console.error('Cache flush error:', error);
     }
   }
 
@@ -93,7 +92,7 @@ export class CacheService {
       await this.set(key, fresh, ttl);
       return fresh;
     } catch (error) {
-      logger.error('Cache getOrSet error:', error);
+      console.error('Cache getOrSet error:', error);
       return fetchFn();
     }
   }
@@ -102,7 +101,7 @@ export class CacheService {
     try {
       return await this.redis.incr(key);
     } catch (error) {
-      logger.error('Cache increment error:', error);
+      console.error('Cache increment error:', error);
       return 0;
     }
   }
@@ -111,7 +110,7 @@ export class CacheService {
     try {
       return await this.redis.decr(key);
     } catch (error) {
-      logger.error('Cache decrement error:', error);
+      console.error('Cache decrement error:', error);
       return 0;
     }
   }
@@ -121,7 +120,7 @@ export class CacheService {
       const serializedValue = JSON.stringify(value);
       await this.redis.hset(key, field, serializedValue);
     } catch (error) {
-      logger.error('Cache setHash error:', error);
+      console.error('Cache setHash error:', error);
     }
   }
 
@@ -130,7 +129,7 @@ export class CacheService {
       const data = await this.redis.hget(key, field);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      logger.error('Cache getHash error:', error);
+      console.error('Cache getHash error:', error);
       return null;
     }
   }
@@ -146,7 +145,7 @@ export class CacheService {
       
       return result;
     } catch (error) {
-      logger.error('Cache getAllHash error:', error);
+      console.error('Cache getAllHash error:', error);
       return {};
     }
   }

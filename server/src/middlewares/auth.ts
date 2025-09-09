@@ -4,13 +4,13 @@ import { User } from '../models/user.model';
 import { AppError } from './error-handler';
 
 interface JwtPayload {
-  id: string;
+  userId: string;
 }
 
 declare global {
   namespace Express {
-    interface Request {
-      user?: any;
+    interface User {
+      _id: any;
     }
   }
 }
@@ -36,7 +36,7 @@ export const authenticate = async (
     ) as JwtPayload;
 
     // Get user from token
-    const user = await User.findById((decoded as any).userId).select('-password');
+    const user = await User.findById(decoded.userId).select('-password');
     if (!user) {
       throw new AppError(401, 'User not found');
     }

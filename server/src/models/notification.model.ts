@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 
 export interface INotification extends Document {
   recipientId: mongoose.Types.ObjectId;
@@ -19,7 +19,21 @@ export interface INotification extends Document {
   updatedAt: Date;
 }
 
-const notificationSchema = new Schema<INotification>(
+interface INotificationModel extends Model<INotification> {
+  createNotification(data: {
+    recipientId: mongoose.Types.ObjectId;
+    senderId?: mongoose.Types.ObjectId;
+    type: INotification['type'];
+    title: string;
+    message: string;
+    data?: any;
+  }): Promise<INotification>;
+  getUserNotifications(userId: mongoose.Types.ObjectId, options?: { limit?: number; skip?: number; unreadOnly?: boolean }): Promise<INotification[]>;
+  markAsRead(userId: mongoose.Types.ObjectId, notificationIds?: mongoose.Types.ObjectId[]): Promise<any>;
+  deleteNotifications(userId: mongoose.Types.ObjectId, notificationIds: mongoose.Types.ObjectId[]): Promise<any>;
+}
+
+const notificationSchema = new Schema<INotification, INotificationModel>(
   {
     recipientId: {
       type: Schema.Types.ObjectId,
@@ -80,7 +94,7 @@ notificationSchema.index({ recipientId: 1, createdAt: -1 });
 notificationSchema.index({ type: 1, createdAt: -1 });
 
 // Static method to create notification
-notificationSchema.statics.createNotification = function(data: {
+notificationSchema.statics.createNotification = function(this: INotificationModel, data: {
   recipientId: mongoose.Types.ObjectId;
   senderId?: mongoose.Types.ObjectId;
   type: INotification['type'];
@@ -92,7 +106,7 @@ notificationSchema.statics.createNotification = function(data: {
 };
 
 // Static method to get user notifications
-notificationSchema.statics.getUserNotifications = function(
+notificationSchema.statics.getUserNotifications = function(this: INotificationModel,
   userId: mongoose.Types.ObjectId,
   options: {
     limit?: number;
@@ -119,7 +133,7 @@ notificationSchema.statics.getUserNotifications = function(
 };
 
 // Static method to mark notifications as read
-notificationSchema.statics.markAsRead = function(
+notificationSchema.statics.markAsRead = function(this: INotificationModel,
   userId: mongoose.Types.ObjectId,
   notificationIds?: mongoose.Types.ObjectId[]
 ) {
@@ -139,7 +153,7 @@ notificationSchema.statics.markAsRead = function(
 };
 
 // Static method to delete notifications
-notificationSchema.statics.deleteNotifications = function(
+notificationSchema.statics.deleteNotifications = function(this: INotificationModel,
   userId: mongoose.Types.ObjectId,
   notificationIds: mongoose.Types.ObjectId[]
 ) {
@@ -161,4 +175,4 @@ notificationSchema.methods.markAsRead = function() {
   return this.save();
 };
 
-export const Notification = mongoose.model<INotification>('Notification', notificationSchema); 
+export const Notification = mongoose.model<INotification, INotificationModel>('Notification', notificationSchema);

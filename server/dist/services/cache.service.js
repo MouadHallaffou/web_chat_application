@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.cacheService = exports.CacheService = void 0;
 const ioredis_1 = __importDefault(require("ioredis"));
-const logger_service_1 = require("./logger.service");
 class CacheService {
     constructor() {
         this.defaultTTL = 3600; // 1 hour
@@ -19,10 +18,10 @@ class CacheService {
             }
         });
         this.redis.on('error', (error) => {
-            logger_service_1.logger.error('Redis error:', error);
+            console.error('Redis error:', error);
         });
         this.redis.on('connect', () => {
-            logger_service_1.logger.info('Redis connected successfully');
+            console.log('Redis connected successfully');
         });
     }
     static getInstance() {
@@ -37,7 +36,7 @@ class CacheService {
             return data ? JSON.parse(data) : null;
         }
         catch (error) {
-            logger_service_1.logger.error('Cache get error:', error);
+            console.error('Cache get error:', error);
             return null;
         }
     }
@@ -47,7 +46,7 @@ class CacheService {
             await this.redis.set(key, serializedValue, 'EX', ttl);
         }
         catch (error) {
-            logger_service_1.logger.error('Cache set error:', error);
+            console.error('Cache set error:', error);
         }
     }
     async del(key) {
@@ -55,7 +54,7 @@ class CacheService {
             await this.redis.del(key);
         }
         catch (error) {
-            logger_service_1.logger.error('Cache delete error:', error);
+            console.error('Cache delete error:', error);
         }
     }
     async exists(key) {
@@ -64,7 +63,7 @@ class CacheService {
             return result === 1;
         }
         catch (error) {
-            logger_service_1.logger.error('Cache exists error:', error);
+            console.error('Cache exists error:', error);
             return false;
         }
     }
@@ -73,7 +72,7 @@ class CacheService {
             await this.redis.flushall();
         }
         catch (error) {
-            logger_service_1.logger.error('Cache flush error:', error);
+            console.error('Cache flush error:', error);
         }
     }
     async getOrSet(key, fetchFn, ttl = this.defaultTTL) {
@@ -87,7 +86,7 @@ class CacheService {
             return fresh;
         }
         catch (error) {
-            logger_service_1.logger.error('Cache getOrSet error:', error);
+            console.error('Cache getOrSet error:', error);
             return fetchFn();
         }
     }
@@ -96,7 +95,7 @@ class CacheService {
             return await this.redis.incr(key);
         }
         catch (error) {
-            logger_service_1.logger.error('Cache increment error:', error);
+            console.error('Cache increment error:', error);
             return 0;
         }
     }
@@ -105,7 +104,7 @@ class CacheService {
             return await this.redis.decr(key);
         }
         catch (error) {
-            logger_service_1.logger.error('Cache decrement error:', error);
+            console.error('Cache decrement error:', error);
             return 0;
         }
     }
@@ -115,7 +114,7 @@ class CacheService {
             await this.redis.hset(key, field, serializedValue);
         }
         catch (error) {
-            logger_service_1.logger.error('Cache setHash error:', error);
+            console.error('Cache setHash error:', error);
         }
     }
     async getHash(key, field) {
@@ -124,7 +123,7 @@ class CacheService {
             return data ? JSON.parse(data) : null;
         }
         catch (error) {
-            logger_service_1.logger.error('Cache getHash error:', error);
+            console.error('Cache getHash error:', error);
             return null;
         }
     }
@@ -138,7 +137,7 @@ class CacheService {
             return result;
         }
         catch (error) {
-            logger_service_1.logger.error('Cache getAllHash error:', error);
+            console.error('Cache getAllHash error:', error);
             return {};
         }
     }

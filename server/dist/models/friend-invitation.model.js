@@ -74,7 +74,8 @@ friendInvitationSchema.index({ status: 1, createdAt: -1 });
 // Prevent duplicate invitations
 friendInvitationSchema.pre('save', async function (next) {
     if (this.isNew) {
-        const existingInvitation = await this.constructor.findOne({
+        const Model = this.constructor;
+        const existingInvitation = await Model.findOne({
             $or: [
                 { senderId: this.senderId, receiverId: this.receiverId },
                 { senderId: this.receiverId, receiverId: this.senderId }

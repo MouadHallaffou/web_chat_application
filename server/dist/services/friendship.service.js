@@ -142,12 +142,12 @@ class FriendshipService {
     // Obtenir la liste des amis d'un utilisateur
     static async getUserFriends(userId) {
         const friendships = await models_1.Friendship.getUserFriends(userId);
-        return friendships.map(friendship => {
+        return friendships.map((friendship) => {
             const friend = friendship.user1Id.toString() === userId.toString()
                 ? friendship.user2Id
                 : friendship.user1Id;
             return {
-                ...friend.toObject(),
+                ...(friend.toObject ? friend.toObject() : friend),
                 friendshipId: friendship._id,
                 lastInteractionAt: friendship.lastInteractionAt
             };

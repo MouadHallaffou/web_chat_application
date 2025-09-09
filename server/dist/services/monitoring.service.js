@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.monitoringService = exports.MonitoringService = void 0;
-const logger_service_1 = require("./logger.service");
+// Replaced custom logger with console to avoid missing module
 const cache_service_1 = require("./cache.service");
 const mongoose_1 = __importDefault(require("mongoose"));
 class MonitoringService {
@@ -31,7 +31,7 @@ class MonitoringService {
             setInterval(() => this.collectMetrics(), 60000); // Every minute
         }
         catch (error) {
-            logger_service_1.logger.error('Failed to initialize metrics:', error);
+            console.error('Failed to initialize metrics:', error);
         }
     }
     async collectMetrics() {
@@ -52,7 +52,7 @@ class MonitoringService {
             await this.persistMetrics();
         }
         catch (error) {
-            logger_service_1.logger.error('Failed to collect metrics:', error);
+            console.error('Failed to collect metrics:', error);
         }
     }
     async updateMetric(name, value) {
@@ -61,7 +61,7 @@ class MonitoringService {
             await cache_service_1.cacheService.setHash('metrics', name, value);
         }
         catch (error) {
-            logger_service_1.logger.error(`Failed to update metric ${name}:`, error);
+            console.error(`Failed to update metric ${name}:`, error);
         }
     }
     async persistMetrics() {
@@ -70,7 +70,7 @@ class MonitoringService {
             await cache_service_1.cacheService.set('metrics:latest', metrics, this.METRICS_TTL);
         }
         catch (error) {
-            logger_service_1.logger.error('Failed to persist metrics:', error);
+            console.error('Failed to persist metrics:', error);
         }
     }
     async incrementMetric(name, value = 1) {
@@ -79,7 +79,7 @@ class MonitoringService {
             await this.updateMetric(name, currentValue + value);
         }
         catch (error) {
-            logger_service_1.logger.error(`Failed to increment metric ${name}:`, error);
+            console.error(`Failed to increment metric ${name}:`, error);
         }
     }
     async decrementMetric(name, value = 1) {
@@ -88,7 +88,7 @@ class MonitoringService {
             await this.updateMetric(name, Math.max(0, currentValue - value));
         }
         catch (error) {
-            logger_service_1.logger.error(`Failed to decrement metric ${name}:`, error);
+            console.error(`Failed to decrement metric ${name}:`, error);
         }
     }
     async getMetric(name) {
@@ -96,7 +96,7 @@ class MonitoringService {
             return this.metrics.get(name) || 0;
         }
         catch (error) {
-            logger_service_1.logger.error(`Failed to get metric ${name}:`, error);
+            console.error(`Failed to get metric ${name}:`, error);
             return 0;
         }
     }
@@ -105,7 +105,7 @@ class MonitoringService {
             return Object.fromEntries(this.metrics);
         }
         catch (error) {
-            logger_service_1.logger.error('Failed to get all metrics:', error);
+            console.error('Failed to get all metrics:', error);
             return {};
         }
     }
@@ -115,7 +115,7 @@ class MonitoringService {
             return history || {};
         }
         catch (error) {
-            logger_service_1.logger.error(`Failed to get metrics history for ${metricName}:`, error);
+            console.error(`Failed to get metrics history for ${metricName}:`, error);
             return {};
         }
     }
@@ -128,16 +128,16 @@ class MonitoringService {
             await this.incrementMetric('response_count');
         }
         catch (error) {
-            logger_service_1.logger.error('Failed to record response time:', error);
+            console.error('Failed to record response time:', error);
         }
     }
     async recordError(error) {
         try {
             await this.incrementMetric('error_count');
-            logger_service_1.logger.error('Application error:', error);
+            console.error('Application error:', error);
         }
         catch (err) {
-            logger_service_1.logger.error('Failed to record error:', err);
+            console.error('Failed to record error:', err);
         }
     }
 }

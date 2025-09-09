@@ -38,7 +38,7 @@ class SocketService {
                     throw new error_handler_1.AppError(401, 'Authentication token required');
                 }
                 const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-                const user = await user_model_1.User.findById(decoded.id).select('-password');
+                const user = await user_model_1.User.findById(decoded.userId).select('-password');
                 if (!user) {
                     throw new error_handler_1.AppError(401, 'User not found');
                 }

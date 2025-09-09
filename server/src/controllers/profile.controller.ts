@@ -15,7 +15,7 @@ interface DeleteAccountData {
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const userId = req.user?._id?.toString() || 'unknown';
+    const userId = ((req as any).user?._id?.toString()) || 'unknown';
     const uploadDir = `uploads/avatars/${userId}`;
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -55,7 +55,10 @@ export const updateProfile = async (
       }
 
       const { username, email, password, removeAvatar } = req.body;
-      const userId = req.user._id;
+      const userId = (req as any).user?._id;
+      if (!userId) {
+        return next(new AppError(401, 'Not authenticated'));
+      }
 
       // Check if username is already taken
       if (username) {
